@@ -1,6 +1,7 @@
 package ltsvlog
 
 import (
+	"io"
 	"sync"
 	"time"
 )
@@ -10,21 +11,17 @@ type LV struct {
 	V string
 }
 
-type Logger interface {
-	Log(v interface{})
-}
-
 type LTSVLogger struct {
-	logger       Logger
+	writer       io.Writer
 	buf          []byte
 	debugEnabled bool
 	mu           sync.Mutex
 }
 
-func NewLTSVLogger(logger Logger, debugEnabled bool) *LTSVLogger {
+func NewLTSVLogger(w io.Writer, debugEnabled bool) *LTSVLogger {
 	return &LTSVLogger{
+		writer:       w,
 		debugEnabled: debugEnabled,
-		logger:       logger,
 	}
 }
 
@@ -59,7 +56,8 @@ func (l *LTSVLogger) log(level string, lv ...LV) {
 		buf = append(buf, byte(':'))
 		buf = append(buf, []byte(labelAndVal.V)...)
 	}
-	l.logger.Log(string(buf))
+	buf = append(buf, byte('\n'))
+	_, _ = l.writer.Write(buf)
 	l.buf = buf
 	l.mu.Unlock()
 }
