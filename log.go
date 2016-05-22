@@ -44,10 +44,10 @@ func (l *LTSVLogger) Error(lv ...LV) {
 }
 
 func (l *LTSVLogger) log(level string, lv ...LV) {
+	now := time.Now().UTC()
 	l.mu.Lock()
-	now := time.Now().Format(time.RFC3339Nano)
 	buf := append(l.buf[:0], []byte("time:")...)
-	buf = append(buf, []byte(now)...)
+	buf = appendTime(buf, now)
 	buf = append(buf, []byte("\tlevel:")...)
 	buf = append(buf, []byte(level)...)
 	for _, labelAndVal := range lv {
@@ -60,4 +60,43 @@ func (l *LTSVLogger) log(level string, lv ...LV) {
 	_, _ = l.writer.Write(buf)
 	l.buf = buf
 	l.mu.Unlock()
+}
+
+func appendTime(buf []byte, t time.Time) []byte {
+	buf = appendDigits(buf, t.Year(), 4)
+	buf = append(buf, byte('-'))
+	buf = appendDigits(buf, int(t.Month()), 2)
+	buf = append(buf, byte('-'))
+	buf = appendDigits(buf, t.Day(), 2)
+	buf = append(buf, byte('T'))
+	buf = appendDigits(buf, t.Hour(), 2)
+	buf = append(buf, byte(':'))
+	buf = appendDigits(buf, t.Minute(), 2)
+	buf = append(buf, byte(':'))
+	buf = appendDigits(buf, t.Second(), 2)
+	buf = append(buf, byte('.'))
+	buf = appendDigits(buf, t.Nanosecond(), 9)
+	return append(buf, byte('Z'))
+}
+
+func appendDigits(buf []byte, value, width int) []byte {
+	width--
+	p := pow10(width)
+	for ; width > 0; width-- {
+		q := value / p
+		buf = append(buf, digits[q])
+		value -= q * p
+		p /= 10
+	}
+	return append(buf, digits[value])
+}
+
+var digits = []byte{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'}
+
+func pow10(e int) int {
+	p := 1
+	for ; e > 0; e-- {
+		p *= 10
+	}
+	return p
 }
