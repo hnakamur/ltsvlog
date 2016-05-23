@@ -25,7 +25,6 @@ func Stack(buf []byte) string {
 	if i == -1 {
 		goto buffer_too_small
 	}
-	p = append(p, buf[:i]...)
 
 	// NOTE: Skip the first stack since it is this function.
 	if i+1 > len(buf) {
@@ -46,7 +45,7 @@ func Stack(buf []byte) string {
 	buf = buf[i+1:]
 
 	for len(buf) > 0 {
-		p = append(p, " ["...)
+		p = append(p, '[')
 		i = bytes.IndexByte(buf, '\n')
 		if i == -1 {
 			goto buffer_too_small
@@ -67,6 +66,9 @@ func Stack(buf []byte) string {
 			goto buffer_too_small
 		}
 		buf = buf[i+1:]
+		if len(buf) > 0 {
+			p = append(p, ',')
+		}
 	}
 	return string(p)
 

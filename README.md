@@ -50,10 +50,10 @@ An example output:
 
 ```
 # go run cmd/example/main.go
-time:2016-05-23T16:42:10.961443395Z     level:Debug     msg:This is a debug message     key:key1        intValue:234
-time:2016-05-23T16:42:10.961466764Z     level:Info      msg:hello, world        key:key1        value:value1
-time:2016-05-23T16:42:10.961479550Z     level:Info      msg:goodbye, world      foo:bar nilValue:<nil>  bytes:0x612f62
-time:2016-05-23T16:42:10.961511161Z     level:Error     err:demo error  stack:goroutine 1 [running]: [main.b() /root/gocode/src/github.com/hnakamur/ltsvlog/cmd/example/main.go:33 +0xd4] [main.a() /root/gocode/src/github.com/hnakamur/ltsvlog/cmd/example/main.go:26 +0x14] [main.main() /root/gocode/src/github.com/hnakamur/ltsvlog/cmd/example/main.go:22 +0xa59]
+time:2016-05-23T17:03:46.065764500Z     level:Debug     msg:This is a debug message     key:key1        intValue:234
+time:2016-05-23T17:03:46.065811814Z     level:Info      msg:hello, world        key:key1        value:value1
+time:2016-05-23T17:03:46.065830188Z     level:Info      msg:goodbye, world      foo:bar nilValue:<nil>  bytes:0x612f62
+time:2016-05-23T17:03:46.065875931Z     level:Error     err:demo error  stack:[main.b() /root/gocode/src/github.com/hnakamur/ltsvlog/cmd/example/main.go:33 +0xd4],[main.a() /root/gocode/src/github.com/hnakamur/ltsvlog/cmd/example/main.go:26 +0x14],[main.main() /root/gocode/src/github.com/hnakamur/ltsvlog/cmd/example/main.go:22 +0xa59]
 ```
 
 ## Benchmark result
