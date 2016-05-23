@@ -31,27 +31,42 @@ type LV struct {
 
 // LTSVLogger is a LTSV logger.
 type LTSVLogger struct {
-	writer       io.Writer
-	debugEnabled bool
-	appendFunc   AppendFunc
-	buf          []byte
-	mu           sync.Mutex
+	writer          io.Writer
+	debugEnabled    bool
+	appendTimeFunc  AppendTimeFunc
+	appendValueFunc AppendValueFunc
+	buf             []byte
+	mu              sync.Mutex
 }
 
-// AppendFunc is a function type for appending a value to
+// AppendTimeFunc is a function type for appending a time to
 // a byte buffer and returns the result buffer.
-type AppendFunc func(buf []byte, v interface{}) []byte
+type AppendTimeFunc func(buf []byte, t time.Time) []byte
 
-// NewLTSVLogger creates a LTSV logger. If you pass nil to appendFunc,
+// AppendValueFunc is a function type for appending a value to
+// a byte buffer and returns the result buffer.
+type AppendValueFunc func(buf []byte, v interface{}) []byte
+
+// NewLTSVLogger creates a LTSV logger with the default time and value format.
+// Shorthand for NewLTSVLoggerCustomFormat(w, debugEnabled, nil, nil).
+func NewLTSVLogger(w io.Writer, debugEnabled bool) *LTSVLogger {
+	return NewLTSVLoggerCustomFormat(w, debugEnabled, nil, nil)
+}
+
+// NewLTSVLoggerCustomFormat creates a LTSV logger. If you pass nil to appendFunc,
 // the unexported default appendValue function is used.
-func NewLTSVLogger(w io.Writer, debugEnabled bool, appendFunc AppendFunc) *LTSVLogger {
-	if appendFunc == nil {
-		appendFunc = appendValue
+func NewLTSVLoggerCustomFormat(w io.Writer, debugEnabled bool, appendTimeFunc AppendTimeFunc, appendValueFunc AppendValueFunc) *LTSVLogger {
+	if appendValueFunc == nil {
+		appendValueFunc = appendValue
+	}
+	if appendTimeFunc == nil {
+		appendTimeFunc = appendTime
 	}
 	return &LTSVLogger{
-		writer:       w,
-		debugEnabled: debugEnabled,
-		appendFunc:   appendFunc,
+		writer:          w,
+		debugEnabled:    debugEnabled,
+		appendTimeFunc:  appendTimeFunc,
+		appendValueFunc: appendValueFunc,
 	}
 }
 
@@ -85,20 +100,7 @@ func (l *LTSVLogger) log(level string, lv ...LV) {
 	// the previously allocated buffer.
 	buf := append(l.buf[:0], "time:"...)
 	now := time.Now().UTC()
-	buf = appendZeroPaddedInt(buf, now.Year(), 1000)
-	buf = append(buf, byte('-'))
-	buf = appendZeroPaddedInt(buf, int(now.Month()), 10)
-	buf = append(buf, byte('-'))
-	buf = appendZeroPaddedInt(buf, now.Day(), 10)
-	buf = append(buf, byte('T'))
-	buf = appendZeroPaddedInt(buf, now.Hour(), 10)
-	buf = append(buf, byte(':'))
-	buf = appendZeroPaddedInt(buf, now.Minute(), 10)
-	buf = append(buf, byte(':'))
-	buf = appendZeroPaddedInt(buf, now.Second(), 10)
-	buf = append(buf, byte('.'))
-	buf = appendZeroPaddedInt(buf, now.Nanosecond(), 100000000)
-	buf = append(buf, byte('Z'))
+	buf = l.appendTimeFunc(buf, now)
 
 	buf = append(buf, "\tlevel:"...)
 	buf = append(buf, []byte(level)...)
@@ -106,12 +108,29 @@ func (l *LTSVLogger) log(level string, lv ...LV) {
 		buf = append(buf, '\t')
 		buf = append(buf, []byte(labelAndVal.L)...)
 		buf = append(buf, ':')
-		buf = l.appendFunc(buf, labelAndVal.V)
+		buf = l.appendValueFunc(buf, labelAndVal.V)
 	}
 	buf = append(buf, '\n')
 	_, _ = l.writer.Write(buf)
 	l.buf = buf
 	l.mu.Unlock()
+}
+
+func appendTime(buf []byte, t time.Time) []byte {
+	buf = appendZeroPaddedInt(buf, t.Year(), 1000)
+	buf = append(buf, byte('-'))
+	buf = appendZeroPaddedInt(buf, int(t.Month()), 10)
+	buf = append(buf, byte('-'))
+	buf = appendZeroPaddedInt(buf, t.Day(), 10)
+	buf = append(buf, byte('T'))
+	buf = appendZeroPaddedInt(buf, t.Hour(), 10)
+	buf = append(buf, byte(':'))
+	buf = appendZeroPaddedInt(buf, t.Minute(), 10)
+	buf = append(buf, byte(':'))
+	buf = appendZeroPaddedInt(buf, t.Second(), 10)
+	buf = append(buf, byte('.'))
+	buf = appendZeroPaddedInt(buf, t.Nanosecond(), 100000000)
+	return append(buf, byte('Z'))
 }
 
 func appendValue(buf []byte, v interface{}) []byte {

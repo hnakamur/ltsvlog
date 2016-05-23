@@ -10,9 +10,9 @@ See https://godoc.org/github.com/hnakamur/ltsvlog for the API document.
 $ go test -bench . -benchmem
 testing: warning: no tests to run
 PASS
-BenchmarkLTSVLog-2       1000000              1225 ns/op             245 B/op          3 allocs/op
-BenchmarkStandardLog-2   1000000              1223 ns/op             235 B/op          3 allocs/op
-ok      github.com/hnakamur/ltsvlog     2.512s
+BenchmarkLTSVLog-2       1000000              1242 ns/op             245 B/op          3 allocs/op
+BenchmarkStandardLog-2   1000000              1186 ns/op             235 B/op          3 allocs/op
+ok      github.com/hnakamur/ltsvlog     2.486s
 ```
 
 ## License
