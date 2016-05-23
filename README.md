@@ -6,7 +6,38 @@ See https://godoc.org/github.com/hnakamur/ltsvlog for the API document.
 
 ## An example code and output
 
-See [an example code](https://github.com/hnakamur/ltsvlog/blob/master/cmd/example/main.go)
+An example code:
+
+```
+package main
+
+import (
+        "os"
+
+        "github.com/hnakamur/ltsvlog"
+)
+
+var logger *ltsvlog.LTSVLogger
+
+func main() {
+        logger = ltsvlog.NewLTSVLogger(os.Stdout, true)
+        if logger.DebugEnabled() {
+                logger.Debug(ltsvlog.LV{"msg", "This is a debug message"}, ltsvlog.LV{"key", "key1"}, ltsvlog.LV{"intValue", 234})
+        }
+        logger.Info(ltsvlog.LV{"msg", "hello, world"}, ltsvlog.LV{"key", "key1"}, ltsvlog.LV{"value", "value1"})        logger.Info(ltsvlog.LV{"msg", "goodbye, world"}, ltsvlog.LV{"foo", "bar"}, ltsvlog.LV{"nilValue", nil}, ltsvlog.LV{"bytes", []byte("a/b")})
+        a()
+}
+
+func a() {
+        b()
+}
+
+func b() {
+        logger.Debug(ltsvlog.LV{"msg", "stack trace example"}, ltsvlog.LV{"stack", ltsvlog.Stack(nil)})
+}
+```
+
+An example output:
 
 ```
 $ go run cmd/example/main.go
