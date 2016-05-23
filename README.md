@@ -10,10 +10,10 @@ See [an example code](https://github.com/hnakamur/ltsvlog/blob/master/cmd/exampl
 
 ```
 $ go run cmd/example/main.go
-time:2016-05-23T15:57:17.748330442Z     level:Debug     msg:This is a debug message     key:key1        intValue:234
-time:2016-05-23T15:57:17.748360741Z     level:Info      msg:hello, world        key:key1        value:value1
-time:2016-05-23T15:57:17.748366628Z     level:Info      msg:goodbye, world      foo:bar nilValue:<nil>  bytes:0x612f62
-time:2016-05-23T15:57:17.748420201Z     level:Debug     msg:stack trace example stack:goroutine 1 [running]: [main.b() /root/gocode/src/github.com/hnakamur/ltsvlog/cmd/example/main.go:26 +0x49] [main.a() /root/gocode/src/github.com/hnakamur/ltsvlog/cmd/example/main.go:22 +0x14] [main.main() /root/gocode/src/github.com/hnakamur/ltsvlog/cmd/example/main.go:18 +0xa59]
+time:2016-05-23T16:17:21.409232724Z     level:Debug     msg:This is a debug message     key:key1        intValue:234
+time:2016-05-23T16:17:21.409257553Z     level:Info      msg:hello, world        key:key1        value:value1
+time:2016-05-23T16:17:21.409335162Z     level:Info      msg:goodbye, world      foo:bar nilValue:<nil>  bytes:0x612f62
+time:2016-05-23T16:17:21.409367554Z     level:Debug     msg:stack trace example stack:goroutine 1 [running]: [main.b() /root/gocode/src/github.com/hnakamur/ltsvlog/cmd/example/main.go:26 +0x49] [main.a() /root/gocode/src/github.com/hnakamur/ltsvlog/cmd/example/main.go:22 +0x14] [main.main() /root/gocode/src/github.com/hnakamur/ltsvlog/cmd/example/main.go:18 +0xa59]
 ```
 
 ## Benchmark result
