@@ -42,7 +42,8 @@ type LTSVLogger struct {
 // a byte buffer and returns the result buffer.
 type AppendFunc func(buf []byte, v interface{}) []byte
 
-// NewLTSVLogger creates a LTSV logger.
+// NewLTSVLogger creates a LTSV logger. If you pass nil to appendFunc,
+// the unexported default appendValue function is used.
 func NewLTSVLogger(w io.Writer, debugEnabled bool, appendFunc AppendFunc) *LTSVLogger {
 	if appendFunc == nil {
 		appendFunc = appendValue
