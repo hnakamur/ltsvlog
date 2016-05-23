@@ -9,8 +9,8 @@ See https://godoc.org/github.com/hnakamur/ltsvlog for the API document.
 ```
 # go test -bench . -benchmem -cpuprofile -memprofile
 ...(snip)...
-BenchmarkLTSVLog-2       2000000               962 ns/op             197 B/op          0 allocs/op
-BenchmarkStandardLog-2   1000000              1194 ns/op             235 B/op          3 allocs/op
+BenchmarkLTSVLog-2       1000000              1257 ns/op             245 B/op          3 allocs/op
+BenchmarkStandardLog-2   1000000              1197 ns/op             235 B/op          3 allocs/op
 ...(snip)...
 ```
 
