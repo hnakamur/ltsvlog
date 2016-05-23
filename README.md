@@ -56,6 +56,8 @@ time:2016-05-23T17:03:46.065830188Z     level:Info      msg:goodbye, world      
 time:2016-05-23T17:03:46.065875931Z     level:Error     err:demo error  stack:[main.b() /root/gocode/src/github.com/hnakamur/ltsvlog/cmd/example/main.go:33 +0xd4],[main.a() /root/gocode/src/github.com/hnakamur/ltsvlog/cmd/example/main.go:26 +0x14],[main.main() /root/gocode/src/github.com/hnakamur/ltsvlog/cmd/example/main.go:22 +0xa59]
 ```
 
+Since these log lines ar long, please scroll horizontally to the right to see all the output.
+
 ## Benchmark result
 
 ```
