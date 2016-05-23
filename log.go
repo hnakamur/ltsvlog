@@ -1,18 +1,24 @@
 // Package ltsvlog is a minimalist logging library for writing logs in
 // LTSV (Labeled Tab-separated Value) format.
 // See http://ltsv.org/ for LTSV.
-// This library is designed with emphasis on more performance than flexibility.
+//
+// This logging library has three log levels: Debug, Info and Error.
+// The Info and Error levels are always enabled.
+// You can disable the Debug level but only when you create a logger.
+//
+// Each log record is printed as one line. A line has multiple fields
+// separated by a tab character. Each field has a label and a value
+// separated by a colon ':' character.
+// So you must not contain a new line or a tab character in your labels
+// and values. You must not contain a colon character in your labels.
+//
+// The folloing two values are prepended to each log line.
 //
 // The first value is the current time with the label "time".
 // The time format is RFC3339Nano UTC like 2006-01-02T15:04:05.999999999Z.
 // The width of the nanoseconds are always 9. For example, the nanoseconds
 // 123 is printed as 123000000.
 // The second value is the log level with the label "level".
-// Then labeled values passed to Debug, Info, Error follows.
-//
-// Package ltsv provides three log levels: Debug, Info and Error.
-// The Info and Error levels are always enabled.
-// You can disable the Debug level but only when you create a logger.
 package ltsvlog
 
 import (

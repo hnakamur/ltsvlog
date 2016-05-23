@@ -10,7 +10,7 @@ import (
 // It returns the string converted from buf. If buf is small,
 // only the partial stack trace followed by "..." is returned.
 // It is the caller's responsibility to pass a large enough buf.
-// If you pass nil as buf, a byte buffer of size 8192 is used internally.
+// If you pass nil as buf, a byte buffer of size 8192 is used.
 func Stack(buf []byte) string {
 	if buf == nil {
 		buf = make([]byte, 8192)
