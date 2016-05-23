@@ -53,8 +53,8 @@ func NewLTSVLogger(w io.Writer, debugEnabled bool) *LTSVLogger {
 	return NewLTSVLoggerCustomFormat(w, debugEnabled, nil, nil)
 }
 
-// NewLTSVLoggerCustomFormat creates a LTSV logger. If you pass nil to appendFunc,
-// the unexported default appendValue function is used.
+// NewLTSVLoggerCustomFormat creates a LTSV logger with user-supplied
+// functions for formatting time and value.
 func NewLTSVLoggerCustomFormat(w io.Writer, debugEnabled bool, appendTimeFunc AppendTimeFunc, appendValueFunc AppendValueFunc) *LTSVLogger {
 	if appendValueFunc == nil {
 		appendValueFunc = appendValue
