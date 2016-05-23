@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	logger := ltsvlog.NewLTSVLogger(os.Stdout, true)
+	logger := ltsvlog.NewLTSVLogger(os.Stdout, true, nil)
 	if logger.DebugEnabled() {
 		logger.Debug(ltsvlog.LV{"msg", "This is a debug message"}, ltsvlog.LV{"key", "key1"}, ltsvlog.LV{"intValue", 234})
 	}

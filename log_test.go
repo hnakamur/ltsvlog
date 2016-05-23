@@ -8,7 +8,7 @@ import (
 
 func BenchmarkLTSVLog(b *testing.B) {
 	w := new(bytes.Buffer)
-	logger := NewLTSVLogger(w, false)
+	logger := NewLTSVLogger(w, false, nil)
 	for i := 0; i < b.N; i++ {
 		logger.Info(LV{"msg", "sample log message"}, LV{"key1", "value1"}, LV{"key2", "value2"})
 	}

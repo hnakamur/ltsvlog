@@ -31,15 +31,24 @@ type LV struct {
 type LTSVLogger struct {
 	writer       io.Writer
 	debugEnabled bool
+	appendFunc   AppendFunc
 	buf          []byte
 	mu           sync.Mutex
 }
 
+// AppendFunc is a function type for appending a value to
+// a byte buffer and returns the result buffer.
+type AppendFunc func(buf []byte, v interface{}) []byte
+
 // NewLTSVLogger creates a LTSV logger.
-func NewLTSVLogger(w io.Writer, debugEnabled bool) *LTSVLogger {
+func NewLTSVLogger(w io.Writer, debugEnabled bool, appendFunc AppendFunc) *LTSVLogger {
+	if appendFunc == nil {
+		appendFunc = appendValue
+	}
 	return &LTSVLogger{
 		writer:       w,
 		debugEnabled: debugEnabled,
+		appendFunc:   appendFunc,
 	}
 }
 
@@ -94,7 +103,7 @@ func (l *LTSVLogger) log(level string, lv ...LV) {
 		buf = append(buf, '\t')
 		buf = append(buf, []byte(labelAndVal.L)...)
 		buf = append(buf, ':')
-		buf = appendValue(buf, labelAndVal.V)
+		buf = l.appendFunc(buf, labelAndVal.V)
 	}
 	buf = append(buf, '\n')
 	_, _ = l.writer.Write(buf)
