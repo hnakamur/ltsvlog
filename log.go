@@ -5,6 +5,8 @@
 //
 // The first value is the current time with the label "time".
 // The time format is RFC3339Nano UTC like 2006-01-02T15:04:05.999999999Z.
+// The width of the nanoseconds are always 9. For example, the nanoseconds
+// 123 is printed as 123000000.
 // The second value is the log level with the label "level".
 // Then labeled values passed to Debug, Info, Error follows.
 //
