@@ -61,8 +61,9 @@ func NewLTSVLogger(w io.Writer, debugEnabled bool) *LTSVLogger {
 	return NewLTSVLoggerCustomFormat(w, debugEnabled, "", "", nil, nil)
 }
 
-// NewLTSVLoggerCustomFormat creates a LTSV logger with user-supplied
-// functions for formatting time and value.
+// NewLTSVLoggerCustomFormat creates a LTSV logger with labels for the
+// time field, the log level field and user-supplied functions for
+// formatting a time and a value.
 func NewLTSVLoggerCustomFormat(w io.Writer, debugEnabled bool, timeLabel, levelLabel string, appendTimeFunc AppendTimeFunc, appendValueFunc AppendValueFunc) *LTSVLogger {
 	if timeLabel == "" {
 		timeLabel = "time"
