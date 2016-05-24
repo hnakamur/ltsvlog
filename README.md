@@ -64,9 +64,9 @@ Since these log lines ar long, please scroll horizontally to the right to see al
 # go test -bench . -benchmem
 testing: warning: no tests to run
 PASS
-BenchmarkLTSVLog-2       1000000              1242 ns/op             245 B/op          3 allocs/op
-BenchmarkStandardLog-2   1000000              1186 ns/op             235 B/op          3 allocs/op
-ok      github.com/hnakamur/ltsvlog     2.486s
+BenchmarkLTSVLog-2       1000000              1258 ns/op             245 B/op          3 allocs/op
+BenchmarkStandardLog-2   1000000              1232 ns/op             235 B/op          3 allocs/op
+ok      github.com/hnakamur/ltsvlog     2.543s
 ```
 
 ## License

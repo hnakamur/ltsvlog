@@ -39,7 +39,9 @@ type LV struct {
 type LTSVLogger struct {
 	writer          io.Writer
 	debugEnabled    bool
+	timeLabel       string
 	appendTimeFunc  AppendTimeFunc
+	levelLabel      string
 	appendValueFunc AppendValueFunc
 	buf             []byte
 	mu              sync.Mutex
@@ -54,14 +56,20 @@ type AppendTimeFunc func(buf []byte, t time.Time) []byte
 type AppendValueFunc func(buf []byte, v interface{}) []byte
 
 // NewLTSVLogger creates a LTSV logger with the default time and value format.
-// Shorthand for NewLTSVLoggerCustomFormat(w, debugEnabled, nil, nil).
+// Shorthand for NewLTSVLoggerCustomFormat(w, debugEnabled, "", "", nil, nil).
 func NewLTSVLogger(w io.Writer, debugEnabled bool) *LTSVLogger {
-	return NewLTSVLoggerCustomFormat(w, debugEnabled, nil, nil)
+	return NewLTSVLoggerCustomFormat(w, debugEnabled, "", "", nil, nil)
 }
 
 // NewLTSVLoggerCustomFormat creates a LTSV logger with user-supplied
 // functions for formatting time and value.
-func NewLTSVLoggerCustomFormat(w io.Writer, debugEnabled bool, appendTimeFunc AppendTimeFunc, appendValueFunc AppendValueFunc) *LTSVLogger {
+func NewLTSVLoggerCustomFormat(w io.Writer, debugEnabled bool, timeLabel, levelLabel string, appendTimeFunc AppendTimeFunc, appendValueFunc AppendValueFunc) *LTSVLogger {
+	if timeLabel == "" {
+		timeLabel = "time"
+	}
+	if levelLabel == "" {
+		levelLabel = "level"
+	}
 	if appendValueFunc == nil {
 		appendValueFunc = appendValue
 	}
@@ -71,6 +79,8 @@ func NewLTSVLoggerCustomFormat(w io.Writer, debugEnabled bool, appendTimeFunc Ap
 	return &LTSVLogger{
 		writer:          w,
 		debugEnabled:    debugEnabled,
+		timeLabel:       timeLabel,
+		levelLabel:      levelLabel,
 		appendTimeFunc:  appendTimeFunc,
 		appendValueFunc: appendValueFunc,
 	}
@@ -104,11 +114,14 @@ func (l *LTSVLogger) log(level string, lv ...LV) {
 	l.mu.Lock()
 	// Note: To reuse the buffer, create an empty slice pointing to
 	// the previously allocated buffer.
-	buf := append(l.buf[:0], "time:"...)
+	buf := append(l.buf[:0], l.timeLabel...)
+	buf = append(buf, ':')
 	now := time.Now().UTC()
 	buf = l.appendTimeFunc(buf, now)
 
-	buf = append(buf, "\tlevel:"...)
+	buf = append(buf, '\t')
+	buf = append(buf, l.levelLabel...)
+	buf = append(buf, ':')
 	buf = append(buf, []byte(level)...)
 	for _, labelAndVal := range lv {
 		buf = append(buf, '\t')
