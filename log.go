@@ -60,9 +60,9 @@ func NewLTSVLogger(w io.Writer, debugEnabled bool) *LTSVLogger {
 	return NewLTSVLoggerCustomFormat(w, debugEnabled, 8192, nil, nil)
 }
 
-// NewLTSVLoggerCustomFormat creates a LTSV logger with user-supplied functions for
-// appending a log record prefix and appending a log value, and a buffer size for
-// filling stack traces.
+// NewLTSVLoggerCustomFormat creates a LTSV logger with the buffer size for
+// filling stack traces and user-supplied functions for appending a log
+// record prefix and appending a log value.
 func NewLTSVLoggerCustomFormat(w io.Writer, debugEnabled bool, stackBufSize int, appendPrefixFunc AppendPrefixFunc, appendValueFunc AppendValueFunc) *LTSVLogger {
 	if appendPrefixFunc == nil {
 		appendPrefixFunc = appendPrefix
