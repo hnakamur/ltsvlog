@@ -17,9 +17,9 @@ func main() {
 	}
 	logger.Info(ltsvlog.LV{"msg", "hello, world"}, ltsvlog.LV{"key", "key1"},
 		ltsvlog.LV{"value", "value1"})
+	a()
 	logger.Info(ltsvlog.LV{"msg", "goodbye, world"}, ltsvlog.LV{"foo", "bar"},
 		ltsvlog.LV{"nilValue", nil}, ltsvlog.LV{"bytes", []byte("a/b")})
-	a()
 }
 
 func a() {
@@ -29,7 +29,6 @@ func a() {
 func b() {
 	err := errors.New("demo error")
 	if err != nil {
-		logger.Error(ltsvlog.LV{"err", err},
-			ltsvlog.LV{"stack", ltsvlog.Stack(nil)})
+		logger.ErrorWithStack(ltsvlog.LV{"err", err})
 	}
 }

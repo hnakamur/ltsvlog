@@ -34,6 +34,7 @@ type LTSVLogger struct {
 	appendPrefixFunc AppendPrefixFunc
 	appendValueFunc  AppendValueFunc
 	buf              []byte
+	stackBuf         []byte
 	mu               sync.Mutex
 }
 
@@ -46,7 +47,7 @@ type AppendPrefixFunc func(buf []byte, level string) []byte
 type AppendValueFunc func(buf []byte, v interface{}) []byte
 
 // NewLTSVLogger creates a LTSV logger with the default time and value format.
-// Shorthand for NewLTSVLoggerCustomFormat(w, debugEnabled, nil, nil).
+// Shorthand for NewLTSVLoggerCustomFormat(w, debugEnabled, 8192, nil, nil).
 //
 // The folloing two values are prepended to each log line.
 //
@@ -56,12 +57,13 @@ type AppendValueFunc func(buf []byte, v interface{}) []byte
 // 123 is printed as 123000000.
 // The second value is the log level with the label "level".
 func NewLTSVLogger(w io.Writer, debugEnabled bool) *LTSVLogger {
-	return NewLTSVLoggerCustomFormat(w, debugEnabled, nil, nil)
+	return NewLTSVLoggerCustomFormat(w, debugEnabled, 8192, nil, nil)
 }
 
 // NewLTSVLoggerCustomFormat creates a LTSV logger with user-supplied functions for
-// appending a log record prefix and appending a log value.
-func NewLTSVLoggerCustomFormat(w io.Writer, debugEnabled bool, appendPrefixFunc AppendPrefixFunc, appendValueFunc AppendValueFunc) *LTSVLogger {
+// appending a log record prefix and appending a log value, and a buffer size for
+// filling stack traces.
+func NewLTSVLoggerCustomFormat(w io.Writer, debugEnabled bool, stackBufSize int, appendPrefixFunc AppendPrefixFunc, appendValueFunc AppendValueFunc) *LTSVLogger {
 	if appendPrefixFunc == nil {
 		appendPrefixFunc = appendPrefix
 	}
@@ -73,6 +75,7 @@ func NewLTSVLoggerCustomFormat(w io.Writer, debugEnabled bool, appendPrefixFunc 
 		debugEnabled:     debugEnabled,
 		appendPrefixFunc: appendPrefixFunc,
 		appendValueFunc:  appendValueFunc,
+		stackBuf:         make([]byte, stackBufSize),
 	}
 }
 
@@ -86,22 +89,36 @@ func (l *LTSVLogger) DebugEnabled() bool {
 // Debug writes a log with the debug level if the debug level is enabled.
 func (l *LTSVLogger) Debug(lv ...LV) {
 	if l.debugEnabled {
+		l.mu.Lock()
 		l.log("Debug", lv...)
+		l.mu.Unlock()
 	}
 }
 
 // Info writes a log with the info level.
 func (l *LTSVLogger) Info(lv ...LV) {
+	l.mu.Lock()
 	l.log("Info", lv...)
+	l.mu.Unlock()
 }
 
 // Error writes a log with the error level.
 func (l *LTSVLogger) Error(lv ...LV) {
+	l.mu.Lock()
 	l.log("Error", lv...)
+	l.mu.Unlock()
+}
+
+// Error writes a log and a stack with the error level.
+func (l *LTSVLogger) ErrorWithStack(lv ...LV) {
+	l.mu.Lock()
+	args := lv
+	args = append(args, LV{"stack", Stack(l.stackBuf)})
+	l.log("Error", args...)
+	l.mu.Unlock()
 }
 
 func (l *LTSVLogger) log(level string, lv ...LV) {
-	l.mu.Lock()
 	// Note: To reuse the buffer, create an empty slice pointing to
 	// the previously allocated buffer.
 	buf := l.appendPrefixFunc(l.buf[:0], level)
@@ -116,7 +133,6 @@ func (l *LTSVLogger) log(level string, lv ...LV) {
 	buf = append(buf, '\n')
 	_, _ = l.writer.Write(buf)
 	l.buf = buf
-	l.mu.Unlock()
 }
 
 func appendPrefix(buf []byte, level string) []byte {
