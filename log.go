@@ -109,11 +109,11 @@ func (l *LTSVLogger) Error(lv ...LV) {
 	l.mu.Unlock()
 }
 
-// Error writes a log and a stack with the error level.
+// ErrorWithStack writes a log and a stack with the error level.
 func (l *LTSVLogger) ErrorWithStack(lv ...LV) {
 	l.mu.Lock()
 	args := lv
-	args = append(args, LV{"stack", Stack(l.stackBuf)})
+	args = append(args, LV{"stack", stack(2, l.stackBuf)})
 	l.log("Error", args...)
 	l.mu.Unlock()
 }

@@ -10,39 +10,24 @@ import (
 // It returns the string converted from buf. If buf is small,
 // only the partial stack trace followed by "..." is returned.
 // It is the caller's responsibility to pass a large enough buf.
-func Stack(buf []byte) string {
+func stack(skip int, buf []byte) string {
 	n := runtime.Stack(buf, false)
 	buf = buf[:n]
 
 	// NOTE: We reuse the same buffer here.
 	p := buf[:0]
 
-	i := bytes.IndexByte(buf, '\n')
-	if i == -1 {
-		goto buffer_too_small
+	for j := 0; j < 1+2*skip; j++ {
+		i := bytes.IndexByte(buf, '\n')
+		if i == -1 || i+1 > len(buf) {
+			goto buffer_too_small
+		}
+		buf = buf[i+1:]
 	}
-
-	// NOTE: Skip the first stack since it is this function.
-	if i+1 > len(buf) {
-		goto buffer_too_small
-	}
-	buf = buf[i+1:]
-
-	i = bytes.IndexByte(buf, '\n')
-	if i == -1 || i+1 > len(buf) {
-		goto buffer_too_small
-	}
-	buf = buf[i+1:]
-
-	i = bytes.IndexByte(buf, '\n')
-	if i == -1 || i+1 > len(buf) {
-		goto buffer_too_small
-	}
-	buf = buf[i+1:]
 
 	for len(buf) > 0 {
 		p = append(p, '[')
-		i = bytes.IndexByte(buf, '\n')
+		i := bytes.IndexByte(buf, '\n')
 		if i == -1 {
 			goto buffer_too_small
 		}
