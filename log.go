@@ -11,14 +11,6 @@
 // separated by a colon ':' character.
 // So you must not contain a new line or a tab character in your labels
 // and values. You must not contain a colon character in your labels.
-//
-// The folloing two values are prepended to each log line.
-//
-// The first value is the current time with the label "time".
-// The time format is RFC3339Nano UTC like 2006-01-02T15:04:05.999999999Z.
-// The width of the nanoseconds are always 9. For example, the nanoseconds
-// 123 is printed as 123000000.
-// The second value is the log level with the label "level".
 package ltsvlog
 
 import (
@@ -37,53 +29,50 @@ type LV struct {
 
 // LTSVLogger is a LTSV logger.
 type LTSVLogger struct {
-	writer          io.Writer
-	debugEnabled    bool
-	timeLabel       string
-	appendTimeFunc  AppendTimeFunc
-	levelLabel      string
-	appendValueFunc AppendValueFunc
-	buf             []byte
-	mu              sync.Mutex
+	writer           io.Writer
+	debugEnabled     bool
+	appendPrefixFunc AppendPrefixFunc
+	appendValueFunc  AppendValueFunc
+	buf              []byte
+	mu               sync.Mutex
 }
 
-// AppendTimeFunc is a function type for appending a time to
-// a byte buffer and returns the result buffer.
-type AppendTimeFunc func(buf []byte, t time.Time) []byte
+// AppendPrefixFunc is a function type for appending a prefix
+// for a log record to a byte buffer and returns the result buffer.
+type AppendPrefixFunc func(buf []byte, level string) []byte
 
 // AppendValueFunc is a function type for appending a value to
 // a byte buffer and returns the result buffer.
 type AppendValueFunc func(buf []byte, v interface{}) []byte
 
 // NewLTSVLogger creates a LTSV logger with the default time and value format.
-// Shorthand for NewLTSVLoggerCustomFormat(w, debugEnabled, "", "", nil, nil).
+// Shorthand for NewLTSVLoggerCustomFormat(w, debugEnabled, nil, nil).
+//
+// The folloing two values are prepended to each log line.
+//
+// The first value is the current time with the label "time".
+// The time format is RFC3339Nano UTC like 2006-01-02T15:04:05.999999999Z.
+// The width of the nanoseconds are always 9. For example, the nanoseconds
+// 123 is printed as 123000000.
+// The second value is the log level with the label "level".
 func NewLTSVLogger(w io.Writer, debugEnabled bool) *LTSVLogger {
-	return NewLTSVLoggerCustomFormat(w, debugEnabled, "", "", nil, nil)
+	return NewLTSVLoggerCustomFormat(w, debugEnabled, nil, nil)
 }
 
-// NewLTSVLoggerCustomFormat creates a LTSV logger with labels for the
-// time field, the log level field and user-supplied functions for
-// formatting a time and a value.
-func NewLTSVLoggerCustomFormat(w io.Writer, debugEnabled bool, timeLabel, levelLabel string, appendTimeFunc AppendTimeFunc, appendValueFunc AppendValueFunc) *LTSVLogger {
-	if timeLabel == "" {
-		timeLabel = "time"
-	}
-	if levelLabel == "" {
-		levelLabel = "level"
+// NewLTSVLoggerCustomFormat creates a LTSV logger with user-supplied functions for
+// appending a log record prefix and appending a log value.
+func NewLTSVLoggerCustomFormat(w io.Writer, debugEnabled bool, appendPrefixFunc AppendPrefixFunc, appendValueFunc AppendValueFunc) *LTSVLogger {
+	if appendPrefixFunc == nil {
+		appendPrefixFunc = appendPrefix
 	}
 	if appendValueFunc == nil {
 		appendValueFunc = appendValue
 	}
-	if appendTimeFunc == nil {
-		appendTimeFunc = appendTime
-	}
 	return &LTSVLogger{
-		writer:          w,
-		debugEnabled:    debugEnabled,
-		timeLabel:       timeLabel,
-		levelLabel:      levelLabel,
-		appendTimeFunc:  appendTimeFunc,
-		appendValueFunc: appendValueFunc,
+		writer:           w,
+		debugEnabled:     debugEnabled,
+		appendPrefixFunc: appendPrefixFunc,
+		appendValueFunc:  appendValueFunc,
 	}
 }
 
@@ -115,17 +104,11 @@ func (l *LTSVLogger) log(level string, lv ...LV) {
 	l.mu.Lock()
 	// Note: To reuse the buffer, create an empty slice pointing to
 	// the previously allocated buffer.
-	buf := append(l.buf[:0], l.timeLabel...)
-	buf = append(buf, ':')
-	now := time.Now().UTC()
-	buf = l.appendTimeFunc(buf, now)
-
-	buf = append(buf, '\t')
-	buf = append(buf, l.levelLabel...)
-	buf = append(buf, ':')
-	buf = append(buf, []byte(level)...)
-	for _, labelAndVal := range lv {
-		buf = append(buf, '\t')
+	buf := l.appendPrefixFunc(l.buf[:0], level)
+	for i, labelAndVal := range lv {
+		if i > 0 {
+			buf = append(buf, '\t')
+		}
 		buf = append(buf, []byte(labelAndVal.L)...)
 		buf = append(buf, ':')
 		buf = l.appendValueFunc(buf, labelAndVal.V)
@@ -134,6 +117,16 @@ func (l *LTSVLogger) log(level string, lv ...LV) {
 	_, _ = l.writer.Write(buf)
 	l.buf = buf
 	l.mu.Unlock()
+}
+
+func appendPrefix(buf []byte, level string) []byte {
+	buf = append(buf, "time:"...)
+	now := time.Now().UTC()
+	buf = appendTime(buf, now)
+	buf = append(buf, "\tlevel:"...)
+	buf = append(buf, []byte(level)...)
+	buf = append(buf, '\t')
+	return buf
 }
 
 func appendTime(buf []byte, t time.Time) []byte {

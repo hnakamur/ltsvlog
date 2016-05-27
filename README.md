@@ -49,11 +49,11 @@ func b() {
 An example output:
 
 ```
-# go run cmd/example/main.go
-time:2016-05-23T17:03:46.065764500Z     level:Debug     msg:This is a debug message     key:key1        intValue:234
-time:2016-05-23T17:03:46.065811814Z     level:Info      msg:hello, world        key:key1        value:value1
-time:2016-05-23T17:03:46.065830188Z     level:Info      msg:goodbye, world      foo:bar nilValue:<nil>  bytes:0x612f62
-time:2016-05-23T17:03:46.065875931Z     level:Error     err:demo error  stack:[main.b() /root/gocode/src/github.com/hnakamur/ltsvlog/cmd/example/main.go:33 +0xd4],[main.a() /root/gocode/src/github.com/hnakamur/ltsvlog/cmd/example/main.go:26 +0x14],[main.main() /root/gocode/src/github.com/hnakamur/ltsvlog/cmd/example/main.go:22 +0xa59]
+$ go run cmd/example/main.go
+time:2016-05-27T02:28:48.226590289Z     level:Debug     msg:This is a debug message     key:key1        intValue:234
+time:2016-05-27T02:28:48.226616799Z     level:Info      msg:hello, world        key:key1        value:value1
+time:2016-05-27T02:28:48.226624826Z     level:Info      msg:goodbye, world      foo:bar nilValue:<nil>  bytes:0x612f62
+time:2016-05-27T02:28:48.226654959Z     level:Error     err:demo error  stack:[main.b() /home/hnakamur/gocode/src/github.com/hnakamur/ltsvlog/cmd/example/main.go:33 +0xd4],[main.a() /home/hnakamur/gocode/src/github.com/hnakamur/ltsvlog/cmd/example/main.go:26 +0x14],[main.main() /home/hnakamur/gocode/src/github.com/hnakamur/ltsvlog/cmd/example/main.go:22 +0xa59]
 ```
 
 Since these log lines ar long, please scroll horizontally to the right to see all the output.
@@ -61,12 +61,12 @@ Since these log lines ar long, please scroll horizontally to the right to see al
 ## Benchmark result
 
 ```
-# go test -bench . -benchmem
+$ go test -bench . -benchmem
 testing: warning: no tests to run
 PASS
-BenchmarkLTSVLog-2       1000000              1258 ns/op             245 B/op          3 allocs/op
-BenchmarkStandardLog-2   1000000              1232 ns/op             235 B/op          3 allocs/op
-ok      github.com/hnakamur/ltsvlog     2.543s
+BenchmarkLTSVLog-2       1000000              1341 ns/op             245 B/op          3 allocs/op
+BenchmarkStandardLog-2   1000000              1224 ns/op             235 B/op          3 allocs/op
+ok      github.com/hnakamur/ltsvlog     2.635s
 ```
 
 ## License
