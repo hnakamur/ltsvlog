@@ -16,6 +16,7 @@ package ltsvlog
 import (
 	"fmt"
 	"io"
+	"os"
 	"strconv"
 	"sync"
 	"time"
@@ -227,3 +228,11 @@ func appendZeroPaddedInt(buf []byte, v, p int) []byte {
 	}
 	return append(buf, digits[v])
 }
+
+// Logger is the global logger.
+// You can change this logger like
+// ltsvlog.Logger = ltsvlog.NewLTSVLogger(os.Stdout, false)
+// You can change the global logger safely only before writing
+// to the logger. Chaging the logger while writing may cause
+// the unexpected behavior.
+var Logger = NewLTSVLogger(os.Stdout, true)
