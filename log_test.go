@@ -16,7 +16,7 @@ func TestAppendValueNil(t *testing.T) {
 }
 
 func TestAppendValueString(t *testing.T) {
-	var val string = "string"
+	val := "string"
 	buf := appendValue(nil, val)
 	want := []byte("string")
 	if !bytes.Equal(buf, want) {

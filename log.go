@@ -28,6 +28,15 @@ type LV struct {
 	V interface{}
 }
 
+// LogWriter is a LTSV logger interface
+type LogWriter interface {
+	DebugEnabled() bool
+	Debug(lv ...LV)
+	Info(lv ...LV)
+	Error(lv ...LV)
+	ErrorWithStack(lv ...LV)
+}
+
 // LTSVLogger is a LTSV logger.
 type LTSVLogger struct {
 	writer           io.Writer
@@ -236,3 +245,21 @@ func appendZeroPaddedInt(buf []byte, v, p int) []byte {
 // to the logger. Chaging the logger while writing may cause
 // the unexpected behavior.
 var Logger = NewLTSVLogger(os.Stdout, true)
+
+// Discard discards any logging outputs.
+type Discard struct{}
+
+// DebugEnabled always return false
+func (*Discard) DebugEnabled() bool { return false }
+
+// Debug prints nothing
+func (*Discard) Debug(lv ...LV) {}
+
+// Info prints nothing
+func (*Discard) Info(lv ...LV) {}
+
+// Error prints nothing
+func (*Discard) Error(lv ...LV) {}
+
+// ErrorWithStack prints nothing
+func (*Discard) ErrorWithStack(lv ...LV) {}
