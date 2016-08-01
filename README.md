@@ -4,6 +4,8 @@ ltsvlog [![Build Status](https://travis-ci.org/hnakamur/ltsvlog.png)](https://tr
 ltsvlog is a minimalist [LTSV; Labeled Tab-separated Values](http://ltsv.org/) logging library in Go.
 See https://godoc.org/github.com/hnakamur/ltsvlog for the API document.
 
+I wrote a blog article about this library in Japanese: [GoでLTSV形式でログ出力するライブラリを書いた · hnakamur's blog at github](http://hnakamur.github.io/blog/2016/06/13/wrote_go_ltsvlog_library/).
+
 ## An example code and output
 
 An example code:
