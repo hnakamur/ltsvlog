@@ -18,6 +18,7 @@ import (
 	"io"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -211,6 +212,12 @@ func appendTime(buf []byte, t time.Time) []byte {
 	return append(buf, byte('Z'))
 }
 
+var escaper = strings.NewReplacer("\t", "\\t", "\n", "\\n")
+
+func escape(s string) string {
+	return escaper.Replace(s)
+}
+
 func appendValue(buf []byte, v interface{}) []byte {
 	// NOTE: In type switch case, case byte and case uint8 cannot coexist,
 	// case rune and case uint cannot coexist.
@@ -218,7 +225,7 @@ func appendValue(buf []byte, v interface{}) []byte {
 	case nil:
 		buf = append(buf, "<nil>"...)
 	case string:
-		buf = append(buf, []byte(v.(string))...)
+		buf = append(buf, []byte(escape(v.(string)))...)
 	case int:
 		buf = strconv.AppendInt(buf, int64(v.(int)), 10)
 	case uint:
@@ -250,9 +257,9 @@ func appendValue(buf []byte, v interface{}) []byte {
 	case []byte:
 		buf = appendHexBytes(buf, v.([]byte))
 	case fmt.Stringer:
-		buf = append(buf, []byte(v.(fmt.Stringer).String())...)
+		buf = append(buf, []byte(escape(v.(fmt.Stringer).String()))...)
 	default:
-		buf = append(buf, []byte(fmt.Sprintf("%v", v))...)
+		buf = append(buf, []byte(escape(fmt.Sprintf("%v", v)))...)
 	}
 	return buf
 }
