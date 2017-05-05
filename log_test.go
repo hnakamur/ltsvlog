@@ -163,10 +163,12 @@ func BenchmarkLTSVLog(b *testing.B) {
 	}
 }
 
+// NOTE: This does not produce a proper LTSV log since a log record does not have the "time: label.
+// This is used just for benchmark comparison.
 func BenchmarkStandardLog(b *testing.B) {
 	w := new(bytes.Buffer)
 	logger := log.New(w, "", log.LstdFlags|log.Lmicroseconds)
 	for i := 0; i < b.N; i++ {
-		logger.Printf("msg:sample log message\tkey1:%s\tkey2:%s", "value1", "value2")
+		logger.Printf("\tmsg:sample log message\tkey1:%s\tkey2:%s", "value1", "value2")
 	}
 }
