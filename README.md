@@ -59,28 +59,28 @@ Since these log lines ar long, please scroll horizontally to the right to see al
 
 ```
 $ go test -count=10 -bench . -benchmem
-BenchmarkLTSVLog-2               2000000               712 ns/op             245 B/op          3 allocs/op
-BenchmarkLTSVLog-2               2000000               726 ns/op             245 B/op          3 allocs/op
-BenchmarkLTSVLog-2               2000000               718 ns/op             245 B/op          3 allocs/op
-BenchmarkLTSVLog-2               2000000               717 ns/op             245 B/op          3 allocs/op
-BenchmarkLTSVLog-2               2000000               717 ns/op             245 B/op          3 allocs/op
-BenchmarkLTSVLog-2               2000000               717 ns/op             245 B/op          3 allocs/op
-BenchmarkLTSVLog-2               2000000               719 ns/op             245 B/op          3 allocs/op
-BenchmarkLTSVLog-2               2000000               721 ns/op             245 B/op          3 allocs/op
-BenchmarkLTSVLog-2               2000000               720 ns/op             245 B/op          3 allocs/op
-BenchmarkLTSVLog-2               2000000               726 ns/op             245 B/op          3 allocs/op
-BenchmarkStandardLog-2           2000000               791 ns/op             274 B/op          3 allocs/op
-BenchmarkStandardLog-2           2000000               790 ns/op             274 B/op          3 allocs/op
-BenchmarkStandardLog-2           2000000               790 ns/op             274 B/op          3 allocs/op
-BenchmarkStandardLog-2           2000000               792 ns/op             274 B/op          3 allocs/op
+BenchmarkLTSVLog-2               2000000               700 ns/op             238 B/op          3 allocs/op
+BenchmarkLTSVLog-2               2000000               705 ns/op             238 B/op          3 allocs/op
+BenchmarkLTSVLog-2               2000000               702 ns/op             238 B/op          3 allocs/op
+BenchmarkLTSVLog-2               2000000               703 ns/op             238 B/op          3 allocs/op
+BenchmarkLTSVLog-2               2000000               704 ns/op             238 B/op          3 allocs/op
+BenchmarkLTSVLog-2               2000000               706 ns/op             238 B/op          3 allocs/op
+BenchmarkLTSVLog-2               2000000               714 ns/op             238 B/op          3 allocs/op
+BenchmarkLTSVLog-2               2000000               705 ns/op             238 B/op          3 allocs/op
+BenchmarkLTSVLog-2               2000000               703 ns/op             238 B/op          3 allocs/op
+BenchmarkLTSVLog-2               2000000               703 ns/op             238 B/op          3 allocs/op
 BenchmarkStandardLog-2           2000000               787 ns/op             274 B/op          3 allocs/op
 BenchmarkStandardLog-2           2000000               790 ns/op             274 B/op          3 allocs/op
 BenchmarkStandardLog-2           2000000               790 ns/op             274 B/op          3 allocs/op
 BenchmarkStandardLog-2           2000000               790 ns/op             274 B/op          3 allocs/op
+BenchmarkStandardLog-2           2000000               794 ns/op             274 B/op          3 allocs/op
+BenchmarkStandardLog-2           2000000               790 ns/op             274 B/op          3 allocs/op
+BenchmarkStandardLog-2           2000000               790 ns/op             274 B/op          3 allocs/op
+BenchmarkStandardLog-2           2000000               793 ns/op             274 B/op          3 allocs/op
+BenchmarkStandardLog-2           2000000               792 ns/op             274 B/op          3 allocs/op
 BenchmarkStandardLog-2           2000000               789 ns/op             274 B/op          3 allocs/op
-BenchmarkStandardLog-2           2000000               791 ns/op             274 B/op          3 allocs/op
 PASS
-ok      github.com/hnakamur/ltsvlog     45.728s
+ok      github.com/hnakamur/ltsvlog     45.224s
 ```
 
 ## License

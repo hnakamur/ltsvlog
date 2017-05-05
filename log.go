@@ -280,7 +280,7 @@ func appendTime(buf []byte, t time.Time) []byte {
 	buf = append(buf, byte(':'))
 	buf = appendZeroPaddedInt(buf, sec, 2)
 	buf = append(buf, byte('.'))
-	buf = appendZeroPaddedInt(buf, t.Nanosecond(), 9)
+	buf = appendZeroPaddedInt(buf, t.Nanosecond()/1e3, 6)
 	return append(buf, byte('Z'))
 }
 
