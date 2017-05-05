@@ -58,12 +58,29 @@ Since these log lines ar long, please scroll horizontally to the right to see al
 ## Benchmark result
 
 ```
-$ go test -bench . -benchmem
-testing: warning: no tests to run
+$ go test -count 10 -bench . -benchmem
+BenchmarkLTSVLog-2               2000000               963 ns/op             245 B/op          3 allocs/op
+BenchmarkLTSVLog-2               2000000               968 ns/op             245 B/op          3 allocs/op
+BenchmarkLTSVLog-2               2000000               968 ns/op             245 B/op          3 allocs/op
+BenchmarkLTSVLog-2               2000000               968 ns/op             245 B/op          3 allocs/op
+BenchmarkLTSVLog-2               2000000               967 ns/op             245 B/op          3 allocs/op
+BenchmarkLTSVLog-2               2000000               978 ns/op             245 B/op          3 allocs/op
+BenchmarkLTSVLog-2               2000000               969 ns/op             245 B/op          3 allocs/op
+BenchmarkLTSVLog-2               2000000               974 ns/op             245 B/op          3 allocs/op
+BenchmarkLTSVLog-2               2000000               971 ns/op             245 B/op          3 allocs/op
+BenchmarkLTSVLog-2               2000000               968 ns/op             245 B/op          3 allocs/op
+BenchmarkStandardLog-2           2000000               773 ns/op             237 B/op          3 allocs/op
+BenchmarkStandardLog-2           2000000               772 ns/op             237 B/op          3 allocs/op
+BenchmarkStandardLog-2           2000000               775 ns/op             237 B/op          3 allocs/op
+BenchmarkStandardLog-2           2000000               773 ns/op             237 B/op          3 allocs/op
+BenchmarkStandardLog-2           2000000               776 ns/op             237 B/op          3 allocs/op
+BenchmarkStandardLog-2           2000000               779 ns/op             237 B/op          3 allocs/op
+BenchmarkStandardLog-2           2000000               773 ns/op             237 B/op          3 allocs/op
+BenchmarkStandardLog-2           2000000               771 ns/op             237 B/op          3 allocs/op
+BenchmarkStandardLog-2           2000000               771 ns/op             237 B/op          3 allocs/op
+BenchmarkStandardLog-2           2000000               771 ns/op             237 B/op          3 allocs/op
 PASS
-BenchmarkLTSVLog-2       1000000              1266 ns/op             245 B/op          3 allocs/op
-BenchmarkStandardLog-2   1000000              1212 ns/op             235 B/op          3 allocs/op
-ok      github.com/hnakamur/ltsvlog     2.542s
+ok      github.com/hnakamur/ltsvlog     52.664s
 ```
 
 ## License

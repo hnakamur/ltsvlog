@@ -18,6 +18,7 @@ import (
 	"io"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -39,13 +40,60 @@ type LogWriter interface {
 
 // LTSVLogger is a LTSV logger.
 type LTSVLogger struct {
-	writer           io.Writer
-	debugEnabled     bool
-	appendPrefixFunc AppendPrefixFunc
-	appendValueFunc  AppendValueFunc
-	buf              []byte
-	stackBuf         []byte
-	mu               sync.Mutex
+	writer                  io.Writer
+	debugEnabled            bool
+	timeLabel               string
+	levelLabel              string
+	appendPrefixFunc        AppendPrefixFunc
+	appendPrefixFuncChanged bool
+	appendValueFunc         AppendValueFunc
+	buf                     []byte
+	stackBuf                []byte
+	mu                      sync.Mutex
+}
+
+// Option is the function type to set an option of LTSVLogger
+type Option func(l *LTSVLogger)
+
+// StackBufSize returns the option function to set the stack buffer size.
+func StackBufSize(size int) Option {
+	return func(l *LTSVLogger) {
+		l.stackBuf = make([]byte, size)
+	}
+}
+
+// SetTimeLabel returns the option function to set the time label.
+// If the label is empty, logger does not print time values.
+func SetTimeLabel(label string) Option {
+	return func(l *LTSVLogger) {
+		l.timeLabel = label
+	}
+}
+
+// SetLevelLabel returns the option function to set the level label.
+// If the label is empty, logger does not print level values.
+func SetLevelLabel(label string) Option {
+	return func(l *LTSVLogger) {
+		l.levelLabel = label
+	}
+}
+
+// SetAppendPrefix returns the option function to set the function
+// to append the log prefix. In the default setting, the prefix consists
+// of the time and the level.
+func SetAppendPrefix(f AppendPrefixFunc) Option {
+	return func(l *LTSVLogger) {
+		l.appendPrefixFunc = f
+		l.appendPrefixFuncChanged = true
+	}
+}
+
+// SetAppendValue returns the option function to set the function
+// to append a value.
+func SetAppendValue(f AppendValueFunc) Option {
+	return func(l *LTSVLogger) {
+		l.appendValueFunc = f
+	}
 }
 
 // AppendPrefixFunc is a function type for appending a prefix
@@ -56,20 +104,45 @@ type AppendPrefixFunc func(buf []byte, level string) []byte
 // a byte buffer and returns the result buffer.
 type AppendValueFunc func(buf []byte, v interface{}) []byte
 
+const (
+	defaultTimeLabel  = "time"
+	defaultLevelLabel = "level"
+)
+
+var defaultAppendPrefixFunc = appendPrefixFunc(defaultTimeLabel, defaultLevelLabel)
+
 // NewLTSVLogger creates a LTSV logger with the default time and value format.
 // Shorthand for NewLTSVLoggerCustomFormat(w, debugEnabled, 8192, nil, nil).
 //
 // The folloing two values are prepended to each log line.
 //
 // The first value is the current time with the label "time".
-// The time format is RFC3339Nano UTC like 2006-01-02T15:04:05.999999999Z.
+// The time format is RFC3339Nano UTC like 2006-01-02T15:04:05.00000000Z.
 // The width of the nanoseconds are always 9. For example, the nanoseconds
 // 123 is printed as 123000000.
 // The second value is the log level with the label "level".
-func NewLTSVLogger(w io.Writer, debugEnabled bool) *LTSVLogger {
-	return NewLTSVLoggerCustomFormat(w, debugEnabled, 8192, nil, nil)
+func NewLTSVLogger(w io.Writer, debugEnabled bool, options ...Option) *LTSVLogger {
+	l := &LTSVLogger{
+		writer:           w,
+		debugEnabled:     debugEnabled,
+		timeLabel:        defaultTimeLabel,
+		levelLabel:       defaultLevelLabel,
+		appendPrefixFunc: defaultAppendPrefixFunc,
+		appendValueFunc:  appendValue,
+		stackBuf:         make([]byte, 8192),
+	}
+	for _, o := range options {
+		o(l)
+	}
+	if !l.appendPrefixFuncChanged &&
+		(l.timeLabel != defaultTimeLabel || l.levelLabel != defaultLevelLabel) {
+		l.appendPrefixFunc = appendPrefixFunc(l.timeLabel, l.levelLabel)
+	}
+	return l
 }
 
+// Deprecated. Use NewLTSVLogger with options instead.
+//
 // NewLTSVLoggerCustomFormat creates a LTSV logger with the buffer size for
 // filling stack traces and user-supplied functions for appending a log
 // record prefix and appending a log value.
@@ -145,6 +218,43 @@ func (l *LTSVLogger) log(level string, lv ...LV) {
 	l.buf = buf
 }
 
+func appendPrefixFunc(timeLabel, levelLabel string) AppendPrefixFunc {
+	if timeLabel != "" && levelLabel != "" {
+		timeLabelBytes := []byte(timeLabel + ":")
+		levelLabelBytes := []byte("\t" + levelLabel + ":")
+		return func(buf []byte, level string) []byte {
+			buf = append(buf, timeLabelBytes...)
+			now := time.Now().UTC()
+			buf = appendTime(buf, now)
+			buf = append(buf, levelLabelBytes...)
+			buf = append(buf, []byte(level)...)
+			buf = append(buf, '\t')
+			return buf
+		}
+	} else if timeLabel != "" && levelLabel == "" {
+		timeLabelBytes := []byte(timeLabel + ":")
+		return func(buf []byte, level string) []byte {
+			buf = append(buf, timeLabelBytes...)
+			now := time.Now().UTC()
+			buf = appendTime(buf, now)
+			buf = append(buf, '\t')
+			return buf
+		}
+	} else if timeLabel == "" && levelLabel != "" {
+		levelLabelBytes := []byte(levelLabel + ":")
+		return func(buf []byte, level string) []byte {
+			buf = append(buf, levelLabelBytes...)
+			buf = append(buf, []byte(level)...)
+			buf = append(buf, '\t')
+			return buf
+		}
+	} else {
+		return func(buf []byte, level string) []byte {
+			return buf
+		}
+	}
+}
+
 func appendPrefix(buf []byte, level string) []byte {
 	buf = append(buf, "time:"...)
 	now := time.Now().UTC()
@@ -172,6 +282,12 @@ func appendTime(buf []byte, t time.Time) []byte {
 	return append(buf, byte('Z'))
 }
 
+var escaper = strings.NewReplacer("\t", "\\t", "\n", "\\n")
+
+func escape(s string) string {
+	return escaper.Replace(s)
+}
+
 func appendValue(buf []byte, v interface{}) []byte {
 	// NOTE: In type switch case, case byte and case uint8 cannot coexist,
 	// case rune and case uint cannot coexist.
@@ -179,7 +295,7 @@ func appendValue(buf []byte, v interface{}) []byte {
 	case nil:
 		buf = append(buf, "<nil>"...)
 	case string:
-		buf = append(buf, []byte(v.(string))...)
+		buf = append(buf, []byte(escape(v.(string)))...)
 	case int:
 		buf = strconv.AppendInt(buf, int64(v.(int)), 10)
 	case uint:
@@ -211,9 +327,9 @@ func appendValue(buf []byte, v interface{}) []byte {
 	case []byte:
 		buf = appendHexBytes(buf, v.([]byte))
 	case fmt.Stringer:
-		buf = append(buf, []byte(v.(fmt.Stringer).String())...)
+		buf = append(buf, []byte(escape(v.(fmt.Stringer).String()))...)
 	default:
-		buf = append(buf, []byte(fmt.Sprintf("%v", v))...)
+		buf = append(buf, []byte(escape(fmt.Sprintf("%+v", v)))...)
 	}
 	return buf
 }
