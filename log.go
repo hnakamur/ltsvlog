@@ -259,7 +259,7 @@ func appendValue(buf []byte, v interface{}) []byte {
 	case fmt.Stringer:
 		buf = append(buf, []byte(escape(v.(fmt.Stringer).String()))...)
 	default:
-		buf = append(buf, []byte(escape(fmt.Sprintf("%v", v)))...)
+		buf = append(buf, []byte(escape(fmt.Sprintf("%+v", v)))...)
 	}
 	return buf
 }
