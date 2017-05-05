@@ -169,6 +169,6 @@ func BenchmarkStandardLog(b *testing.B) {
 	w := new(bytes.Buffer)
 	logger := log.New(w, "", log.LstdFlags|log.Lmicroseconds)
 	for i := 0; i < b.N; i++ {
-		logger.Printf("\tmsg:sample log message\tkey1:%s\tkey2:%s", "value1", "value2")
+		logger.Printf("level:Info\tmsg:sample log message\tkey1:%s\tkey2:%s", "value1", "value2")
 	}
 }
