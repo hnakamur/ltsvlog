@@ -40,13 +40,16 @@ type LogWriter interface {
 
 // LTSVLogger is a LTSV logger.
 type LTSVLogger struct {
-	writer           io.Writer
-	debugEnabled     bool
-	appendPrefixFunc AppendPrefixFunc
-	appendValueFunc  AppendValueFunc
-	buf              []byte
-	stackBuf         []byte
-	mu               sync.Mutex
+	writer                  io.Writer
+	debugEnabled            bool
+	timeLabel               string
+	levelLabel              string
+	appendPrefixFunc        AppendPrefixFunc
+	appendPrefixFuncChanged bool
+	appendValueFunc         AppendValueFunc
+	buf                     []byte
+	stackBuf                []byte
+	mu                      sync.Mutex
 }
 
 // Option is the function type to set an option of LTSVLogger
@@ -59,12 +62,29 @@ func StackBufSize(size int) Option {
 	}
 }
 
+// SetTimeLabel returns the option function to set the time label.
+// If the label is empty, logger does not print time values.
+func SetTimeLabel(label string) Option {
+	return func(l *LTSVLogger) {
+		l.timeLabel = label
+	}
+}
+
+// SetLevelLabel returns the option function to set the level label.
+// If the label is empty, logger does not print level values.
+func SetLevelLabel(label string) Option {
+	return func(l *LTSVLogger) {
+		l.levelLabel = label
+	}
+}
+
 // SetAppendPrefix returns the option function to set the function
 // to append the log prefix. In the default setting, the prefix consists
 // of the time and the level.
 func SetAppendPrefix(f AppendPrefixFunc) Option {
 	return func(l *LTSVLogger) {
 		l.appendPrefixFunc = f
+		l.appendPrefixFuncChanged = true
 	}
 }
 
@@ -84,6 +104,13 @@ type AppendPrefixFunc func(buf []byte, level string) []byte
 // a byte buffer and returns the result buffer.
 type AppendValueFunc func(buf []byte, v interface{}) []byte
 
+const (
+	defaultTimeLabel  = "time"
+	defaultLevelLabel = "level"
+)
+
+var defaultAppendPrefixFunc = appendPrefixFunc(defaultTimeLabel, defaultLevelLabel)
+
 // NewLTSVLogger creates a LTSV logger with the default time and value format.
 // Shorthand for NewLTSVLoggerCustomFormat(w, debugEnabled, 8192, nil, nil).
 //
@@ -98,12 +125,18 @@ func NewLTSVLogger(w io.Writer, debugEnabled bool, options ...Option) *LTSVLogge
 	l := &LTSVLogger{
 		writer:           w,
 		debugEnabled:     debugEnabled,
-		appendPrefixFunc: appendPrefix,
+		timeLabel:        defaultTimeLabel,
+		levelLabel:       defaultLevelLabel,
+		appendPrefixFunc: defaultAppendPrefixFunc,
 		appendValueFunc:  appendValue,
 		stackBuf:         make([]byte, 8192),
 	}
 	for _, o := range options {
 		o(l)
+	}
+	if !l.appendPrefixFuncChanged &&
+		(l.timeLabel != defaultTimeLabel || l.levelLabel != defaultLevelLabel) {
+		l.appendPrefixFunc = appendPrefixFunc(l.timeLabel, l.levelLabel)
 	}
 	return l
 }
@@ -183,6 +216,43 @@ func (l *LTSVLogger) log(level string, lv ...LV) {
 	buf = append(buf, '\n')
 	_, _ = l.writer.Write(buf)
 	l.buf = buf
+}
+
+func appendPrefixFunc(timeLabel, levelLabel string) AppendPrefixFunc {
+	if timeLabel != "" && levelLabel != "" {
+		timeLabelBytes := []byte(timeLabel + ":")
+		levelLabelBytes := []byte("\t" + levelLabel + ":")
+		return func(buf []byte, level string) []byte {
+			buf = append(buf, timeLabelBytes...)
+			now := time.Now().UTC()
+			buf = appendTime(buf, now)
+			buf = append(buf, levelLabelBytes...)
+			buf = append(buf, []byte(level)...)
+			buf = append(buf, '\t')
+			return buf
+		}
+	} else if timeLabel != "" && levelLabel == "" {
+		timeLabelBytes := []byte(timeLabel + ":")
+		return func(buf []byte, level string) []byte {
+			buf = append(buf, timeLabelBytes...)
+			now := time.Now().UTC()
+			buf = appendTime(buf, now)
+			buf = append(buf, '\t')
+			return buf
+		}
+	} else if timeLabel == "" && levelLabel != "" {
+		levelLabelBytes := []byte(levelLabel + ":")
+		return func(buf []byte, level string) []byte {
+			buf = append(buf, levelLabelBytes...)
+			buf = append(buf, []byte(level)...)
+			buf = append(buf, '\t')
+			return buf
+		}
+	} else {
+		return func(buf []byte, level string) []byte {
+			return buf
+		}
+	}
 }
 
 func appendPrefix(buf []byte, level string) []byte {
