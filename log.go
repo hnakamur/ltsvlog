@@ -8,9 +8,14 @@
 //
 // Each log record is printed as one line. A line has multiple fields
 // separated by a tab character. Each field has a label and a value
-// separated by a colon ':' character.
-// So you must not contain a new line or a tab character in your labels
-// and values. You must not contain a colon character in your labels.
+// which are separated by a colon ':' character.
+//
+// So you must not contain a colon character in labels.
+// This is not checked in this library for performance reason,
+// so it is your responsibility not to contain a colon character in labels.
+//
+// Newline and tab characters in values are escaped with "\\n" and "\\t"
+// respectively.
 package ltsvlog
 
 import (
@@ -62,7 +67,7 @@ func StackBufSize(size int) Option {
 }
 
 // SetTimeLabel returns the option function to set the time label.
-// If the label is empty, logger does not print time values.
+// If the label is empty, loggers do not print time values.
 func SetTimeLabel(label string) Option {
 	return func(l *LTSVLogger) {
 		l.timeLabel = label
@@ -70,7 +75,7 @@ func SetTimeLabel(label string) Option {
 }
 
 // SetLevelLabel returns the option function to set the level label.
-// If the label is empty, logger does not print level values.
+// If the label is empty, loggers do not print level values.
 func SetLevelLabel(label string) Option {
 	return func(l *LTSVLogger) {
 		l.levelLabel = label
@@ -85,6 +90,8 @@ func SetAppendValue(f AppendValueFunc) Option {
 	}
 }
 
+// Deprecated. Use SetTimeLabel or SetLevelLabel instead.
+//
 // AppendPrefixFunc is a function type for appending a prefix
 // for a log record to a byte buffer and returns the result buffer.
 type AppendPrefixFunc func(buf []byte, level string) []byte
@@ -101,15 +108,15 @@ const (
 var defaultAppendPrefixFunc = appendPrefixFunc(defaultTimeLabel, defaultLevelLabel)
 
 // NewLTSVLogger creates a LTSV logger with the default time and value format.
-// Shorthand for NewLTSVLoggerCustomFormat(w, debugEnabled, 8192, nil, nil).
 //
 // The folloing two values are prepended to each log line.
 //
-// The first value is the current time with the label "time".
-// The time format is RFC3339Nano UTC like 2006-01-02T15:04:05.00000000Z.
-// The width of the nanoseconds are always 9. For example, the nanoseconds
-// 123 is printed as 123000000.
-// The second value is the log level with the label "level".
+// The first value is the current time, and has the default label "time".
+// The time format is RFC3339 with microseconds in UTC timezone.
+// This format is the same as "2006-01-02T15:04:05.000000Z" in the
+// go time format https://golang.org/pkg/time/#Time.Format
+//
+// The second value is the log level with the default label "level".
 func NewLTSVLogger(w io.Writer, debugEnabled bool, options ...Option) *LTSVLogger {
 	l := &LTSVLogger{
 		writer:           w,
@@ -152,12 +159,18 @@ func NewLTSVLoggerCustomFormat(w io.Writer, debugEnabled bool, stackBufSize int,
 
 // DebugEnabled returns whether or not the debug level is enabled.
 // You can avoid the cost of evaluation of arguments passed to Debug like:
-// if logger.DebugEnabled() { logger.Debug(ltsvlog.LTV{"label1": "value1"}) }
+//
+//   if ltsvlog.Logger.DebugEnabled() {
+//       ltsvlog.Logger.Debug(ltsvlog.LV{"label1", someSlowFunction()})
+//   }
 func (l *LTSVLogger) DebugEnabled() bool {
 	return l.debugEnabled
 }
 
 // Debug writes a log with the debug level if the debug level is enabled.
+//
+// Note there still exsits the cost of evaluating argument values if the debug level is disabled, even though those arguments are not used.
+// So guarding with if and DebugEnabled is recommended.
 func (l *LTSVLogger) Debug(lv ...LV) {
 	if l.debugEnabled {
 		l.mu.Lock()
@@ -357,7 +370,7 @@ func appendZeroPaddedInt(buf []byte, i int, wid int) []byte {
 // You can change this logger like
 // ltsvlog.Logger = ltsvlog.NewLTSVLogger(os.Stdout, false)
 // You can change the global logger safely only before writing
-// to the logger. Chaging the logger while writing may cause
+// to the logger. Changing the logger while writing may cause
 // the unexpected behavior.
 var Logger = NewLTSVLogger(os.Stdout, true)
 
@@ -367,14 +380,19 @@ type Discard struct{}
 // DebugEnabled always return false
 func (*Discard) DebugEnabled() bool { return false }
 
-// Debug prints nothing
+// Debug prints nothing.
+// Note there still exsits the cost of evaluating argument values, even though they are not used.
+// Guarding with if and DebugEnabled is recommended.
 func (*Discard) Debug(lv ...LV) {}
 
-// Info prints nothing
+// Info prints nothing.
+// Note there still exsits the cost of evaluating argument values, even though they are not used.
 func (*Discard) Info(lv ...LV) {}
 
-// Error prints nothing
+// Error prints nothing.
+// Note there still exsits the cost of evaluating argument values, even though they are not used.
 func (*Discard) Error(lv ...LV) {}
 
-// ErrorWithStack prints nothing
+// ErrorWithStack prints nothing.
+// Note there still exsits the cost of evaluating argument values, even though they are not used.
 func (*Discard) ErrorWithStack(lv ...LV) {}
