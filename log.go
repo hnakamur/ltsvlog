@@ -40,16 +40,15 @@ type LogWriter interface {
 
 // LTSVLogger is a LTSV logger.
 type LTSVLogger struct {
-	writer                  io.Writer
-	debugEnabled            bool
-	timeLabel               string
-	levelLabel              string
-	appendPrefixFunc        AppendPrefixFunc
-	appendPrefixFuncChanged bool
-	appendValueFunc         AppendValueFunc
-	buf                     []byte
-	stackBuf                []byte
-	mu                      sync.Mutex
+	writer           io.Writer
+	debugEnabled     bool
+	timeLabel        string
+	levelLabel       string
+	appendPrefixFunc AppendPrefixFunc
+	appendValueFunc  AppendValueFunc
+	buf              []byte
+	stackBuf         []byte
+	mu               sync.Mutex
 }
 
 // Option is the function type to set an option of LTSVLogger
@@ -75,16 +74,6 @@ func SetTimeLabel(label string) Option {
 func SetLevelLabel(label string) Option {
 	return func(l *LTSVLogger) {
 		l.levelLabel = label
-	}
-}
-
-// SetAppendPrefix returns the option function to set the function
-// to append the log prefix. In the default setting, the prefix consists
-// of the time and the level.
-func SetAppendPrefix(f AppendPrefixFunc) Option {
-	return func(l *LTSVLogger) {
-		l.appendPrefixFunc = f
-		l.appendPrefixFuncChanged = true
 	}
 }
 
@@ -134,8 +123,7 @@ func NewLTSVLogger(w io.Writer, debugEnabled bool, options ...Option) *LTSVLogge
 	for _, o := range options {
 		o(l)
 	}
-	if !l.appendPrefixFuncChanged &&
-		(l.timeLabel != defaultTimeLabel || l.levelLabel != defaultLevelLabel) {
+	if l.timeLabel != defaultTimeLabel || l.levelLabel != defaultLevelLabel {
 		l.appendPrefixFunc = appendPrefixFunc(l.timeLabel, l.levelLabel)
 	}
 	return l
