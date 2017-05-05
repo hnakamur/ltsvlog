@@ -2,8 +2,10 @@ package ltsvlog
 
 import (
 	"bytes"
+	"io/ioutil"
 	"log"
 	"math"
+	"os"
 	"testing"
 )
 
@@ -156,8 +158,13 @@ func TestAppendValueFloat64(t *testing.T) {
 }
 
 func BenchmarkLTSVLog(b *testing.B) {
-	w := new(bytes.Buffer)
-	logger := NewLTSVLogger(w, false)
+	tmpfile, err := ioutil.TempFile("", "benchmark")
+	if err != nil {
+		b.Fatal(err)
+	}
+	defer os.Remove(tmpfile.Name())
+
+	logger := NewLTSVLogger(tmpfile, false)
 	for i := 0; i < b.N; i++ {
 		logger.Info(LV{"msg", "sample log message"}, LV{"key1", "value1"}, LV{"key2", "value2"})
 	}
@@ -166,8 +173,13 @@ func BenchmarkLTSVLog(b *testing.B) {
 // NOTE: This does not produce a proper LTSV log since a log record does not have the "time: label.
 // This is used just for benchmark comparison.
 func BenchmarkStandardLog(b *testing.B) {
-	w := new(bytes.Buffer)
-	logger := log.New(w, "", log.LstdFlags|log.Lmicroseconds)
+	tmpfile, err := ioutil.TempFile("", "benchmark")
+	if err != nil {
+		b.Fatal(err)
+	}
+	defer os.Remove(tmpfile.Name())
+
+	logger := log.New(tmpfile, "", log.LstdFlags|log.Lmicroseconds)
 	for i := 0; i < b.N; i++ {
 		logger.Printf("level:Info\tmsg:sample log message\tkey1:%s\tkey2:%s", "value1", "value2")
 	}
