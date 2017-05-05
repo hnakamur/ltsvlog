@@ -266,19 +266,19 @@ func appendPrefix(buf []byte, level string) []byte {
 }
 
 func appendTime(buf []byte, t time.Time) []byte {
-	buf = appendZeroPaddedInt(buf, t.Year(), 1000)
+	buf = appendZeroPaddedInt(buf, t.Year(), 4)
 	buf = append(buf, byte('-'))
-	buf = appendZeroPaddedInt(buf, int(t.Month()), 10)
+	buf = appendZeroPaddedInt(buf, int(t.Month()), 2)
 	buf = append(buf, byte('-'))
-	buf = appendZeroPaddedInt(buf, t.Day(), 10)
+	buf = appendZeroPaddedInt(buf, t.Day(), 2)
 	buf = append(buf, byte('T'))
-	buf = appendZeroPaddedInt(buf, t.Hour(), 10)
+	buf = appendZeroPaddedInt(buf, t.Hour(), 2)
 	buf = append(buf, byte(':'))
-	buf = appendZeroPaddedInt(buf, t.Minute(), 10)
+	buf = appendZeroPaddedInt(buf, t.Minute(), 2)
 	buf = append(buf, byte(':'))
-	buf = appendZeroPaddedInt(buf, t.Second(), 10)
+	buf = appendZeroPaddedInt(buf, t.Second(), 2)
 	buf = append(buf, byte('.'))
-	buf = appendZeroPaddedInt(buf, t.Nanosecond(), 100000000)
+	buf = appendZeroPaddedInt(buf, t.Nanosecond(), 9)
 	return append(buf, byte('Z'))
 }
 
@@ -345,13 +345,22 @@ func appendHexBytes(buf []byte, v []byte) []byte {
 	return buf
 }
 
-func appendZeroPaddedInt(buf []byte, v, p int) []byte {
-	for ; p > 1; p /= 10 {
-		q := v / p
-		buf = append(buf, digits[q])
-		v -= q * p
+// Cheap integer to fixed-width decimal ASCII.  Give a negative width to avoid zero-padding.
+// Copied from https://github.com/golang/go/blob/go1.8.1/src/log/log.go#L75-L90
+func appendZeroPaddedInt(buf []byte, i int, wid int) []byte {
+	// Assemble decimal in reverse order.
+	var b [20]byte
+	bp := len(b) - 1
+	for i >= 10 || wid > 1 {
+		wid--
+		q := i / 10
+		b[bp] = byte('0' + i - q*10)
+		bp--
+		i = q
 	}
-	return append(buf, digits[v])
+	// i < 10
+	b[bp] = byte('0' + i)
+	return append(buf, b[bp:]...)
 }
 
 // Logger is the global logger.
