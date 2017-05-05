@@ -48,6 +48,33 @@ type LTSVLogger struct {
 	mu               sync.Mutex
 }
 
+// Option is the function type to set an option of LTSVLogger
+type Option func(l *LTSVLogger)
+
+// StackBufSize returns the option function to set the stack buffer size.
+func StackBufSize(size int) Option {
+	return func(l *LTSVLogger) {
+		l.stackBuf = make([]byte, size)
+	}
+}
+
+// SetAppendPrefix returns the option function to set the function
+// to append the log prefix. In the default setting, the prefix consists
+// of the time and the level.
+func SetAppendPrefix(f AppendPrefixFunc) Option {
+	return func(l *LTSVLogger) {
+		l.appendPrefixFunc = f
+	}
+}
+
+// SetAppendValue returns the option function to set the function
+// to append a value.
+func SetAppendValue(f AppendValueFunc) Option {
+	return func(l *LTSVLogger) {
+		l.appendValueFunc = f
+	}
+}
+
 // AppendPrefixFunc is a function type for appending a prefix
 // for a log record to a byte buffer and returns the result buffer.
 type AppendPrefixFunc func(buf []byte, level string) []byte
@@ -62,14 +89,26 @@ type AppendValueFunc func(buf []byte, v interface{}) []byte
 // The folloing two values are prepended to each log line.
 //
 // The first value is the current time with the label "time".
-// The time format is RFC3339Nano UTC like 2006-01-02T15:04:05.999999999Z.
+// The time format is RFC3339Nano UTC like 2006-01-02T15:04:05.00000000Z.
 // The width of the nanoseconds are always 9. For example, the nanoseconds
 // 123 is printed as 123000000.
 // The second value is the log level with the label "level".
-func NewLTSVLogger(w io.Writer, debugEnabled bool) *LTSVLogger {
-	return NewLTSVLoggerCustomFormat(w, debugEnabled, 8192, nil, nil)
+func NewLTSVLogger(w io.Writer, debugEnabled bool, options ...Option) *LTSVLogger {
+	l := &LTSVLogger{
+		writer:           w,
+		debugEnabled:     debugEnabled,
+		appendPrefixFunc: appendPrefix,
+		appendValueFunc:  appendValue,
+		stackBuf:         make([]byte, 8192),
+	}
+	for _, o := range options {
+		o(l)
+	}
+	return l
 }
 
+// Deprecated. Use NewLTSVLogger with options instead.
+//
 // NewLTSVLoggerCustomFormat creates a LTSV logger with the buffer size for
 // filling stack traces and user-supplied functions for appending a log
 // record prefix and appending a log value.
