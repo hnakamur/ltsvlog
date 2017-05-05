@@ -30,13 +30,12 @@ func Example() {
 		ltsvlog.LV{"nilValue", nil}, ltsvlog.LV{"bytes", []byte("a/b")})
 
 	//Output:
-	//hoge
 
 	// Actually we don't test the results.
 	// This example is added just for document purpose.
 }
 
 func ExampleNewLTSVLogger() {
-	// Switch the global logger to a logger which does not print level values.
+	// Change the global logger to a logger which does not print level values.
 	ltsvlog.Logger = ltsvlog.NewLTSVLogger(os.Stdout, true, ltsvlog.SetLevelLabel(""))
 }
