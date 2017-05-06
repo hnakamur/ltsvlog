@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"math"
 	"testing"
+	"time"
 )
 
 func TestAppendValueNil(t *testing.T) {
@@ -150,6 +151,23 @@ func TestAppendValueFloat64(t *testing.T) {
 		want := []byte(c.want)
 		if !bytes.Equal(buf, want) {
 			t.Errorf("float64 value mismatch. got=%s, want=%s", string(buf), string(want))
+		}
+	}
+}
+
+func TestAppendTime(t *testing.T) {
+	testCases := []struct {
+		val  time.Time
+		want string
+	}{
+		{val: time.Unix(0, 0).UTC(), want: "1970-01-01T00:00:00.000000Z"},
+		{val: time.Date(2017, 5, 7, 22, 13, 59, 987654000, time.UTC), want: "2017-05-07T22:13:59.987654Z"},
+	}
+	for _, c := range testCases {
+		buf := appendTime(nil, c.val)
+		want := []byte(c.want)
+		if !bytes.Equal(buf, want) {
+			t.Errorf("time value mismatch. got=%s, want=%s", string(buf), want)
 		}
 	}
 }
