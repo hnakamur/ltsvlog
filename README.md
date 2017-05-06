@@ -71,48 +71,48 @@ The other two prints times with microsecond precision.
 
 ```
 $ go test -count=10 -bench . -benchmem -cpuprofile=cpu.prof
-BenchmarkLTSVLog-2                 	 1000000	      2042 ns/op	      48 B/op	       3 allocs/op
-BenchmarkLTSVLog-2                 	 1000000	      2033 ns/op	      48 B/op	       3 allocs/op
-BenchmarkLTSVLog-2                 	 1000000	      2073 ns/op	      48 B/op	       3 allocs/op
-BenchmarkLTSVLog-2                 	 1000000	      2036 ns/op	      48 B/op	       3 allocs/op
-BenchmarkLTSVLog-2                 	 1000000	      2032 ns/op	      48 B/op	       3 allocs/op
-BenchmarkLTSVLog-2                 	 1000000	      2018 ns/op	      48 B/op	       3 allocs/op
-BenchmarkLTSVLog-2                 	 1000000	      2064 ns/op	      48 B/op	       3 allocs/op
-BenchmarkLTSVLog-2                 	 1000000	      2053 ns/op	      48 B/op	       3 allocs/op
-BenchmarkLTSVLog-2                 	 1000000	      2045 ns/op	      48 B/op	       3 allocs/op
-BenchmarkLTSVLog-2                 	 1000000	      2051 ns/op	      48 B/op	       3 allocs/op
-BenchmarkStandardLog-2             	  500000	      2430 ns/op	      96 B/op	       3 allocs/op
-BenchmarkStandardLog-2             	  500000	      2384 ns/op	      96 B/op	       3 allocs/op
-BenchmarkStandardLog-2             	  500000	      2403 ns/op	      96 B/op	       3 allocs/op
-BenchmarkStandardLog-2             	  500000	      2358 ns/op	      96 B/op	       3 allocs/op
-BenchmarkStandardLog-2             	  500000	      2470 ns/op	      96 B/op	       3 allocs/op
-BenchmarkStandardLog-2             	  500000	      2450 ns/op	      96 B/op	       3 allocs/op
-BenchmarkStandardLog-2             	  500000	      2465 ns/op	      96 B/op	       3 allocs/op
-BenchmarkStandardLog-2             	  500000	      2370 ns/op	      96 B/op	       3 allocs/op
-BenchmarkStandardLog-2             	  500000	      2442 ns/op	      96 B/op	       3 allocs/op
-BenchmarkStandardLog-2             	 1000000	      2405 ns/op	      96 B/op	       3 allocs/op
-BenchmarkZapLTSVProductionLog-2    	 5000000	       329 ns/op	     128 B/op	       1 allocs/op
-BenchmarkZapLTSVProductionLog-2    	 5000000	       348 ns/op	     128 B/op	       1 allocs/op
-BenchmarkZapLTSVProductionLog-2    	 5000000	       367 ns/op	     128 B/op	       1 allocs/op
-BenchmarkZapLTSVProductionLog-2    	 5000000	       308 ns/op	     128 B/op	       1 allocs/op
-BenchmarkZapLTSVProductionLog-2    	 5000000	       364 ns/op	     128 B/op	       1 allocs/op
-BenchmarkZapLTSVProductionLog-2    	 3000000	       373 ns/op	     128 B/op	       1 allocs/op
-BenchmarkZapLTSVProductionLog-2    	 5000000	       323 ns/op	     128 B/op	       1 allocs/op
-BenchmarkZapLTSVProductionLog-2    	 5000000	       368 ns/op	     128 B/op	       1 allocs/op
-BenchmarkZapLTSVProductionLog-2    	 5000000	       319 ns/op	     128 B/op	       1 allocs/op
-BenchmarkZapLTSVProductionLog-2    	 5000000	       355 ns/op	     128 B/op	       1 allocs/op
-BenchmarkZapLTSVDevelopmentLog-2   	  200000	      6089 ns/op	     197 B/op	       4 allocs/op
-BenchmarkZapLTSVDevelopmentLog-2   	  200000	      6115 ns/op	     197 B/op	       4 allocs/op
-BenchmarkZapLTSVDevelopmentLog-2   	  200000	      6074 ns/op	     197 B/op	       4 allocs/op
-BenchmarkZapLTSVDevelopmentLog-2   	  200000	      6172 ns/op	     197 B/op	       4 allocs/op
-BenchmarkZapLTSVDevelopmentLog-2   	  200000	      6136 ns/op	     197 B/op	       4 allocs/op
-BenchmarkZapLTSVDevelopmentLog-2   	  200000	      6177 ns/op	     197 B/op	       4 allocs/op
-BenchmarkZapLTSVDevelopmentLog-2   	  200000	      6107 ns/op	     197 B/op	       4 allocs/op
-BenchmarkZapLTSVDevelopmentLog-2   	  200000	      6098 ns/op	     197 B/op	       4 allocs/op
-BenchmarkZapLTSVDevelopmentLog-2   	  200000	      6121 ns/op	     197 B/op	       4 allocs/op
-BenchmarkZapLTSVDevelopmentLog-2   	  200000	      6229 ns/op	     197 B/op	       4 allocs/op
+BenchmarkLTSVLog-2                       1000000              2036 ns/op              48 B/op          3 allocs/op
+BenchmarkLTSVLog-2                       1000000              2028 ns/op              48 B/op          3 allocs/op
+BenchmarkLTSVLog-2                       1000000              2046 ns/op              48 B/op          3 allocs/op
+BenchmarkLTSVLog-2                       1000000              2049 ns/op              48 B/op          3 allocs/op
+BenchmarkLTSVLog-2                       1000000              2035 ns/op              48 B/op          3 allocs/op
+BenchmarkLTSVLog-2                       1000000              2061 ns/op              48 B/op          3 allocs/op
+BenchmarkLTSVLog-2                       1000000              2049 ns/op              48 B/op          3 allocs/op
+BenchmarkLTSVLog-2                       1000000              2041 ns/op              48 B/op          3 allocs/op
+BenchmarkLTSVLog-2                       1000000              2046 ns/op              48 B/op          3 allocs/op
+BenchmarkLTSVLog-2                       1000000              2043 ns/op              48 B/op          3 allocs/op
+BenchmarkStandardLog-2                    500000              2408 ns/op              96 B/op          3 allocs/op
+BenchmarkStandardLog-2                    500000              2412 ns/op              96 B/op          3 allocs/op
+BenchmarkStandardLog-2                    500000              2448 ns/op              96 B/op          3 allocs/op
+BenchmarkStandardLog-2                    500000              2434 ns/op              96 B/op          3 allocs/op
+BenchmarkStandardLog-2                    500000              2400 ns/op              96 B/op          3 allocs/op
+BenchmarkStandardLog-2                    500000              2421 ns/op              96 B/op          3 allocs/op
+BenchmarkStandardLog-2                    500000              2431 ns/op              96 B/op          3 allocs/op
+BenchmarkStandardLog-2                    500000              2449 ns/op              96 B/op          3 allocs/op
+BenchmarkStandardLog-2                    500000              2432 ns/op              96 B/op          3 allocs/op
+BenchmarkStandardLog-2                    500000              2386 ns/op              96 B/op          3 allocs/op
+BenchmarkZapLTSVProductionLog-2          3000000               415 ns/op             128 B/op          1 allocs/op
+BenchmarkZapLTSVProductionLog-2          5000000               412 ns/op             128 B/op          1 allocs/op
+BenchmarkZapLTSVProductionLog-2          3000000               419 ns/op             128 B/op          1 allocs/op
+BenchmarkZapLTSVProductionLog-2          5000000               398 ns/op             128 B/op          1 allocs/op
+BenchmarkZapLTSVProductionLog-2          5000000               374 ns/op             128 B/op          1 allocs/op
+BenchmarkZapLTSVProductionLog-2          3000000               365 ns/op             128 B/op          1 allocs/op
+BenchmarkZapLTSVProductionLog-2          5000000               419 ns/op             128 B/op          1 allocs/op
+BenchmarkZapLTSVProductionLog-2          3000000               414 ns/op             128 B/op          1 allocs/op
+BenchmarkZapLTSVProductionLog-2          5000000               398 ns/op             128 B/op          1 allocs/op
+BenchmarkZapLTSVProductionLog-2          3000000               404 ns/op             128 B/op          1 allocs/op
+BenchmarkZapLTSVDevelopmentLog-2          200000              6123 ns/op             197 B/op          4 allocs/op
+BenchmarkZapLTSVDevelopmentLog-2          200000              6104 ns/op             197 B/op          4 allocs/op
+BenchmarkZapLTSVDevelopmentLog-2          200000              6145 ns/op             197 B/op          4 allocs/op
+BenchmarkZapLTSVDevelopmentLog-2          200000              6169 ns/op             197 B/op          4 allocs/op
+BenchmarkZapLTSVDevelopmentLog-2          200000              6149 ns/op             197 B/op          4 allocs/op
+BenchmarkZapLTSVDevelopmentLog-2          200000              6124 ns/op             197 B/op          4 allocs/op
+BenchmarkZapLTSVDevelopmentLog-2          200000              6190 ns/op             197 B/op          4 allocs/op
+BenchmarkZapLTSVDevelopmentLog-2          200000              6144 ns/op             197 B/op          4 allocs/op
+BenchmarkZapLTSVDevelopmentLog-2          200000              6105 ns/op             197 B/op          4 allocs/op
+BenchmarkZapLTSVDevelopmentLog-2          200000              6102 ns/op             197 B/op          4 allocs/op
 PASS
-ok  	github.com/hnakamur/ltsvlog	67.479s
+ok      github.com/hnakamur/ltsvlog     67.083s
 ```
 
 ## License
