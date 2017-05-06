@@ -2,10 +2,7 @@ package ltsvlog
 
 import (
 	"bytes"
-	"io/ioutil"
-	"log"
 	"math"
-	"os"
 	"testing"
 )
 
@@ -154,33 +151,5 @@ func TestAppendValueFloat64(t *testing.T) {
 		if !bytes.Equal(buf, want) {
 			t.Errorf("float64 value mismatch. got=%s, want=%s", string(buf), string(want))
 		}
-	}
-}
-
-func BenchmarkLTSVLog(b *testing.B) {
-	tmpfile, err := ioutil.TempFile("", "benchmark")
-	if err != nil {
-		b.Fatal(err)
-	}
-	defer os.Remove(tmpfile.Name())
-
-	logger := NewLTSVLogger(tmpfile, false)
-	for i := 0; i < b.N; i++ {
-		logger.Info(LV{"msg", "sample log message"}, LV{"key1", "value1"}, LV{"key2", "value2"})
-	}
-}
-
-// NOTE: This does not produce a proper LTSV log since a log record does not have the "time: label.
-// This is used just for benchmark comparison.
-func BenchmarkStandardLog(b *testing.B) {
-	tmpfile, err := ioutil.TempFile("", "benchmark")
-	if err != nil {
-		b.Fatal(err)
-	}
-	defer os.Remove(tmpfile.Name())
-
-	logger := log.New(tmpfile, "", log.LstdFlags|log.Lmicroseconds)
-	for i := 0; i < b.N; i++ {
-		logger.Printf("level:Info\tmsg:sample log message\tkey1:%s\tkey2:%s", "value1", "value2")
 	}
 }

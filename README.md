@@ -57,29 +57,62 @@ Since these log lines ar long, please scroll horizontally to the right to see al
 
 ## Benchmark result
 
+Note these benchmarks print roughly same outputs, but not the exactly same outputs.
+
+Especially BenchmarkZapLTSVProductionLog uses
+[zapcore.EpochTimeEncoder](https://godoc.org/go.uber.org/zap/zapcore#EpochTimeEncoder).
+It prints time as floating-point number of seconds since the Unix epoch, and this is a
+low cost operation compared to printing time in ISO8609 format.
+
+Other benchmarks (BenchmarkLTSVLog, BenchmarkStandardLog and BenchmarkZapLTSVDevelopmentLog)
+uses ISO8609 time format, though there is a slight difference.
+BenchmarkZapLTSVDevelopmentLog uses [zapcore.ISO8601TimeEncoder](https://godoc.org/go.uber.org/zap/zapcore#ISO8601TimeEncoder) which prints times with millisecond precision.
+The other two prints times with microsecond precision.
+
 ```
-BenchmarkLTSVLog-2       	 2000000	       683 ns/op	     238 B/op	       3 allocs/op
-BenchmarkLTSVLog-2       	 2000000	       677 ns/op	     238 B/op	       3 allocs/op
-BenchmarkLTSVLog-2       	 2000000	       674 ns/op	     238 B/op	       3 allocs/op
-BenchmarkLTSVLog-2       	 2000000	       677 ns/op	     238 B/op	       3 allocs/op
-BenchmarkLTSVLog-2       	 2000000	       676 ns/op	     238 B/op	       3 allocs/op
-BenchmarkLTSVLog-2       	 2000000	       673 ns/op	     238 B/op	       3 allocs/op
-BenchmarkLTSVLog-2       	 2000000	       673 ns/op	     238 B/op	       3 allocs/op
-BenchmarkLTSVLog-2       	 2000000	       675 ns/op	     238 B/op	       3 allocs/op
-BenchmarkLTSVLog-2       	 2000000	       676 ns/op	     238 B/op	       3 allocs/op
-BenchmarkLTSVLog-2       	 2000000	       675 ns/op	     238 B/op	       3 allocs/op
-BenchmarkStandardLog-2   	 2000000	       808 ns/op	     274 B/op	       3 allocs/op
-BenchmarkStandardLog-2   	 2000000	       803 ns/op	     274 B/op	       3 allocs/op
-BenchmarkStandardLog-2   	 2000000	       804 ns/op	     274 B/op	       3 allocs/op
-BenchmarkStandardLog-2   	 2000000	       804 ns/op	     274 B/op	       3 allocs/op
-BenchmarkStandardLog-2   	 2000000	       805 ns/op	     274 B/op	       3 allocs/op
-BenchmarkStandardLog-2   	 2000000	       806 ns/op	     274 B/op	       3 allocs/op
-BenchmarkStandardLog-2   	 2000000	       805 ns/op	     274 B/op	       3 allocs/op
-BenchmarkStandardLog-2   	 2000000	       807 ns/op	     274 B/op	       3 allocs/op
-BenchmarkStandardLog-2   	 2000000	       804 ns/op	     274 B/op	       3 allocs/op
-BenchmarkStandardLog-2   	 2000000	       807 ns/op	     274 B/op	       3 allocs/op
+$ go test -count=10 -bench . -benchmem -cpuprofile=cpu.prof
+BenchmarkLTSVLog-2                 	 1000000	      2042 ns/op	      48 B/op	       3 allocs/op
+BenchmarkLTSVLog-2                 	 1000000	      2033 ns/op	      48 B/op	       3 allocs/op
+BenchmarkLTSVLog-2                 	 1000000	      2073 ns/op	      48 B/op	       3 allocs/op
+BenchmarkLTSVLog-2                 	 1000000	      2036 ns/op	      48 B/op	       3 allocs/op
+BenchmarkLTSVLog-2                 	 1000000	      2032 ns/op	      48 B/op	       3 allocs/op
+BenchmarkLTSVLog-2                 	 1000000	      2018 ns/op	      48 B/op	       3 allocs/op
+BenchmarkLTSVLog-2                 	 1000000	      2064 ns/op	      48 B/op	       3 allocs/op
+BenchmarkLTSVLog-2                 	 1000000	      2053 ns/op	      48 B/op	       3 allocs/op
+BenchmarkLTSVLog-2                 	 1000000	      2045 ns/op	      48 B/op	       3 allocs/op
+BenchmarkLTSVLog-2                 	 1000000	      2051 ns/op	      48 B/op	       3 allocs/op
+BenchmarkStandardLog-2             	  500000	      2430 ns/op	      96 B/op	       3 allocs/op
+BenchmarkStandardLog-2             	  500000	      2384 ns/op	      96 B/op	       3 allocs/op
+BenchmarkStandardLog-2             	  500000	      2403 ns/op	      96 B/op	       3 allocs/op
+BenchmarkStandardLog-2             	  500000	      2358 ns/op	      96 B/op	       3 allocs/op
+BenchmarkStandardLog-2             	  500000	      2470 ns/op	      96 B/op	       3 allocs/op
+BenchmarkStandardLog-2             	  500000	      2450 ns/op	      96 B/op	       3 allocs/op
+BenchmarkStandardLog-2             	  500000	      2465 ns/op	      96 B/op	       3 allocs/op
+BenchmarkStandardLog-2             	  500000	      2370 ns/op	      96 B/op	       3 allocs/op
+BenchmarkStandardLog-2             	  500000	      2442 ns/op	      96 B/op	       3 allocs/op
+BenchmarkStandardLog-2             	 1000000	      2405 ns/op	      96 B/op	       3 allocs/op
+BenchmarkZapLTSVProductionLog-2    	 5000000	       329 ns/op	     128 B/op	       1 allocs/op
+BenchmarkZapLTSVProductionLog-2    	 5000000	       348 ns/op	     128 B/op	       1 allocs/op
+BenchmarkZapLTSVProductionLog-2    	 5000000	       367 ns/op	     128 B/op	       1 allocs/op
+BenchmarkZapLTSVProductionLog-2    	 5000000	       308 ns/op	     128 B/op	       1 allocs/op
+BenchmarkZapLTSVProductionLog-2    	 5000000	       364 ns/op	     128 B/op	       1 allocs/op
+BenchmarkZapLTSVProductionLog-2    	 3000000	       373 ns/op	     128 B/op	       1 allocs/op
+BenchmarkZapLTSVProductionLog-2    	 5000000	       323 ns/op	     128 B/op	       1 allocs/op
+BenchmarkZapLTSVProductionLog-2    	 5000000	       368 ns/op	     128 B/op	       1 allocs/op
+BenchmarkZapLTSVProductionLog-2    	 5000000	       319 ns/op	     128 B/op	       1 allocs/op
+BenchmarkZapLTSVProductionLog-2    	 5000000	       355 ns/op	     128 B/op	       1 allocs/op
+BenchmarkZapLTSVDevelopmentLog-2   	  200000	      6089 ns/op	     197 B/op	       4 allocs/op
+BenchmarkZapLTSVDevelopmentLog-2   	  200000	      6115 ns/op	     197 B/op	       4 allocs/op
+BenchmarkZapLTSVDevelopmentLog-2   	  200000	      6074 ns/op	     197 B/op	       4 allocs/op
+BenchmarkZapLTSVDevelopmentLog-2   	  200000	      6172 ns/op	     197 B/op	       4 allocs/op
+BenchmarkZapLTSVDevelopmentLog-2   	  200000	      6136 ns/op	     197 B/op	       4 allocs/op
+BenchmarkZapLTSVDevelopmentLog-2   	  200000	      6177 ns/op	     197 B/op	       4 allocs/op
+BenchmarkZapLTSVDevelopmentLog-2   	  200000	      6107 ns/op	     197 B/op	       4 allocs/op
+BenchmarkZapLTSVDevelopmentLog-2   	  200000	      6098 ns/op	     197 B/op	       4 allocs/op
+BenchmarkZapLTSVDevelopmentLog-2   	  200000	      6121 ns/op	     197 B/op	       4 allocs/op
+BenchmarkZapLTSVDevelopmentLog-2   	  200000	      6229 ns/op	     197 B/op	       4 allocs/op
 PASS
-ok  	github.com/hnakamur/ltsvlog	44.867s
+ok  	github.com/hnakamur/ltsvlog	67.479s
 ```
 
 ## License
