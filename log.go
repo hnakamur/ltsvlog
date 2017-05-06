@@ -267,22 +267,35 @@ func appendPrefix(buf []byte, level string) []byte {
 }
 
 func appendTime(buf []byte, t time.Time) []byte {
+	buf = append(buf, []byte("0000-00-00T00:00:00.000000Z")...)
 	year, month, day := t.Date()
-	buf = appendZeroPaddedInt(buf, year, 4)
-	buf = append(buf, byte('-'))
-	buf = appendZeroPaddedInt(buf, int(month), 2)
-	buf = append(buf, byte('-'))
-	buf = appendZeroPaddedInt(buf, day, 2)
-	buf = append(buf, byte('T'))
 	hour, min, sec := t.Clock()
-	buf = appendZeroPaddedInt(buf, hour, 2)
-	buf = append(buf, byte(':'))
-	buf = appendZeroPaddedInt(buf, min, 2)
-	buf = append(buf, byte(':'))
-	buf = appendZeroPaddedInt(buf, sec, 2)
-	buf = append(buf, byte('.'))
-	buf = appendZeroPaddedInt(buf, t.Nanosecond()/1e3, 6)
-	return append(buf, byte('Z'))
+	itoa(buf[:4], year, 4)
+	itoa(buf[5:7], int(month), 2)
+	itoa(buf[8:10], day, 2)
+	itoa(buf[11:13], hour, 2)
+	itoa(buf[14:16], min, 2)
+	itoa(buf[17:19], sec, 2)
+	itoa(buf[20:26], t.Nanosecond()/1e3, 6)
+	return buf
+}
+
+// Cheap integer to fixed-width decimal ASCII.  Give a negative width to avoid zero-padding.
+// Copied from https://github.com/golang/go/blob/go1.8.1/src/log/log.go#L75-L90
+// and modified for ltsvlog.
+// It is user's responsibility to pass buf which len(buf) >= wid
+func itoa(buf []byte, i int, wid int) {
+	// Assemble decimal in reverse order.
+	bp := wid - 1
+	for i >= 10 || wid > 1 {
+		wid--
+		q := i / 10
+		buf[bp] = byte('0' + i - q*10)
+		bp--
+		i = q
+	}
+	// i < 10
+	buf[bp] = byte('0' + i)
 }
 
 var escaper = strings.NewReplacer("\t", "\\t", "\n", "\\n")
@@ -346,24 +359,6 @@ func appendHexBytes(buf []byte, v []byte) []byte {
 		buf = append(buf, digits[b%16])
 	}
 	return buf
-}
-
-// Cheap integer to fixed-width decimal ASCII.  Give a negative width to avoid zero-padding.
-// Copied from https://github.com/golang/go/blob/go1.8.1/src/log/log.go#L75-L90
-func appendZeroPaddedInt(buf []byte, i int, wid int) []byte {
-	// Assemble decimal in reverse order.
-	var b [20]byte
-	bp := len(b) - 1
-	for i >= 10 || wid > 1 {
-		wid--
-		q := i / 10
-		b[bp] = byte('0' + i - q*10)
-		bp--
-		i = q
-	}
-	// i < 10
-	b[bp] = byte('0' + i)
-	return append(buf, b[bp:]...)
 }
 
 // Logger is the global logger.
