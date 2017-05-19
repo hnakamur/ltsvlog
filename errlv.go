@@ -15,6 +15,8 @@ import (
 // ErrLV frees lower level functions from depending on loggers
 // since ErrLV is just a data structure which holds
 // an error, a stacktrace and labeld values.
+//
+// Please see the example at LTSVLogger.Err for an example usage.
 type ErrLV struct {
 	error
 	lvs []LV
@@ -59,8 +61,8 @@ func (e *ErrLV) GetError() error {
 	return e.error
 }
 
-// ToLVs converts a ErrLV to a LV slice which can be passed to ltsv.LogWriter.Error.
-func (e *ErrLV) ToLVs() []LV {
+// toLVs converts a ErrLV to a LV slice which can be passed to ltsv.LogWriter.Error.
+func (e *ErrLV) toLVs() []LV {
 	return e.lvs
 }
 

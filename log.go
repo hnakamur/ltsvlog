@@ -39,6 +39,8 @@ type LogWriter interface {
 	DebugEnabled() bool
 	Debug(lv ...LV)
 	Info(lv ...LV)
+	Err(err error)
+
 	Error(lv ...LV)
 	ErrorWithStack(lv ...LV)
 }
@@ -169,7 +171,7 @@ func (l *LTSVLogger) DebugEnabled() bool {
 
 // Debug writes a log with the debug level if the debug level is enabled.
 //
-// Note there still exsits the cost of evaluating argument values if the debug level is disabled, even though those arguments are not used.
+// Note there still exists the cost of evaluating argument values if the debug level is disabled, even though those arguments are not used.
 // So guarding with if and DebugEnabled is recommended.
 func (l *LTSVLogger) Debug(lv ...LV) {
 	if l.debugEnabled {
@@ -186,6 +188,8 @@ func (l *LTSVLogger) Info(lv ...LV) {
 	l.mu.Unlock()
 }
 
+// Deprecated. Use Err instead.
+//
 // Error writes a log with the error level.
 func (l *LTSVLogger) Error(lv ...LV) {
 	l.mu.Lock()
@@ -193,12 +197,30 @@ func (l *LTSVLogger) Error(lv ...LV) {
 	l.mu.Unlock()
 }
 
+// Deprecated. Use Err instead.
+//
 // ErrorWithStack writes a log and a stack with the error level.
 func (l *LTSVLogger) ErrorWithStack(lv ...LV) {
 	l.mu.Lock()
 	args := lv
 	args = append(args, LV{"stack", stack(2, l.stackBuf)})
 	l.log("Error", args...)
+	l.mu.Unlock()
+}
+
+// Err writes a log for an error with the error level.
+// If err is a *ErrLV, this logs the error with labeled values.
+// If err is not a *ErrLV, this logs the error with the label "err".
+func (l *LTSVLogger) Err(err error) {
+	var lv []LV
+	errLV, ok := err.(*ErrLV)
+	if ok {
+		lv = errLV.toLVs()
+	} else {
+		lv = []LV{{"err", err}}
+	}
+	l.mu.Lock()
+	l.log("Error", lv...)
 	l.mu.Unlock()
 }
 
@@ -390,18 +412,21 @@ type Discard struct{}
 func (*Discard) DebugEnabled() bool { return false }
 
 // Debug prints nothing.
-// Note there still exsits the cost of evaluating argument values, even though they are not used.
+// Note there still exists the cost of evaluating argument values, even though they are not used.
 // Guarding with if and DebugEnabled is recommended.
 func (*Discard) Debug(lv ...LV) {}
 
 // Info prints nothing.
-// Note there still exsits the cost of evaluating argument values, even though they are not used.
+// Note there still exists the cost of evaluating argument values, even though they are not used.
 func (*Discard) Info(lv ...LV) {}
 
 // Error prints nothing.
-// Note there still exsits the cost of evaluating argument values, even though they are not used.
+// Note there still exists the cost of evaluating argument values, even though they are not used.
 func (*Discard) Error(lv ...LV) {}
 
 // ErrorWithStack prints nothing.
-// Note there still exsits the cost of evaluating argument values, even though they are not used.
+// Note there still exists the cost of evaluating argument values, even though they are not used.
 func (*Discard) ErrorWithStack(lv ...LV) {}
+
+// Err prints nothing.
+func (*Discard) Err(err error) {}
