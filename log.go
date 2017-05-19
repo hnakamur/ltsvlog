@@ -61,6 +61,9 @@ type LTSVLogger struct {
 // Option is the function type to set an option of LTSVLogger
 type Option func(l *LTSVLogger)
 
+// Deprecated. This is not needed if you use LTSVLogger.Err instead of
+// deprecated LTSVLogger.Error and LTSVLogger.ErrorWithStack.
+//
 // StackBufSize returns the option function to set the stack buffer size.
 func StackBufSize(size int) Option {
 	return func(l *LTSVLogger) {
