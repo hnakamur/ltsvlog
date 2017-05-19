@@ -3,37 +3,57 @@ package ltsvlog
 import (
 	"bytes"
 	"runtime"
+	"time"
 )
 
-type ErrKV struct {
+type ErrLV interface {
+	LV(key string, value interface{}) ErrLV
+	Stack() ErrLV
+	Time() ErrLV
+
+	Error() string
+	GetError() error
+	ToLVs() []LV
+}
+
+type errLV struct {
 	error
 	lvs []LV
 }
 
-func Err(err error) *ErrKV {
-	return &ErrKV{
+func Err(err error) ErrLV {
+	e := &errLV{
 		error: err,
-		lvs: []LV{
-			{"err", err},
-			{"stack", fullstack(2)},
-		},
+		lvs:   make([]LV, 0, 8),
 	}
+	e.lvs = append(e.lvs, LV{"err", err})
+	return e
 }
 
-func (e *ErrKV) KV(key string, value interface{}) *ErrKV {
+func (e *errLV) Stack() ErrLV {
+	e.lvs = append(e.lvs, LV{"stack", fullstack(2)})
+	return e
+}
+
+func (e *errLV) Time() ErrLV {
+	e.lvs = append(e.lvs, LV{"errtime", formatTime(time.Now())})
+	return e
+}
+
+func (e *errLV) LV(key string, value interface{}) ErrLV {
 	e.lvs = append(e.lvs, LV{key, value})
 	return e
 }
 
-func (e *ErrKV) Error() string {
+func (e *errLV) Error() string {
 	return e.error.Error()
 }
 
-func (e *ErrKV) GetError() error {
+func (e *errLV) GetError() error {
 	return e.error
 }
 
-func (e *ErrKV) ToLVs() []LV {
+func (e *errLV) ToLVs() []LV {
 	return e.lvs
 }
 
@@ -74,4 +94,18 @@ func fullstack(skip int) string {
 		}
 	}
 	return string(p)
+}
+
+func formatTime(t time.Time) string {
+	buf := []byte("0000-00-00T00:00:00.000000Z")
+	year, month, day := t.Date()
+	hour, min, sec := t.Clock()
+	itoa(buf[:4], year, 4)
+	itoa(buf[5:7], int(month), 2)
+	itoa(buf[8:10], day, 2)
+	itoa(buf[11:13], hour, 2)
+	itoa(buf[14:16], min, 2)
+	itoa(buf[17:19], sec, 2)
+	itoa(buf[20:26], t.Nanosecond()/1e3, 6)
+	return string(buf)
 }
