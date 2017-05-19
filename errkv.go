@@ -6,23 +6,23 @@ import (
 	"time"
 )
 
-type ErrLV interface {
-	LV(key string, value interface{}) ErrLV
-	Stack() ErrLV
-	Time() ErrLV
-
-	Error() string
-	GetError() error
-	ToLVs() []LV
-}
-
-type errLV struct {
+// ErrLV is an error with label and value pairs.
+//
+// This is useful when you would like to log an error with
+// additional labeled values later at the higher level of
+// the callstack.
+//
+// ErrLV frees lower level functions from depending on loggers
+// since ErrLV is just a data structure which holds
+// an error, a stacktrace and labeld values.
+type ErrLV struct {
 	error
 	lvs []LV
 }
 
-func Err(err error) ErrLV {
-	e := &errLV{
+// Err creates an ErrLV with the specified error.
+func Err(err error) *ErrLV {
+	e := &ErrLV{
 		error: err,
 		lvs:   make([]LV, 0, 8),
 	}
@@ -30,30 +30,37 @@ func Err(err error) ErrLV {
 	return e
 }
 
-func (e *errLV) Stack() ErrLV {
+// Stack appends a stacktrace with label "stack" to ErrLV.
+func (e *ErrLV) Stack() *ErrLV {
 	e.lvs = append(e.lvs, LV{"stack", fullstack(2)})
 	return e
 }
 
-func (e *errLV) Time() ErrLV {
+// Time appends a current time with label "errtime" to ErrLV.
+// This is useful when you log some time later after an error occurs.
+func (e *ErrLV) Time() *ErrLV {
 	e.lvs = append(e.lvs, LV{"errtime", formatTime(time.Now())})
 	return e
 }
 
-func (e *errLV) LV(key string, value interface{}) ErrLV {
+// LV appends a label value pair to ErrLV.
+func (e *ErrLV) LV(key string, value interface{}) *ErrLV {
 	e.lvs = append(e.lvs, LV{key, value})
 	return e
 }
 
-func (e *errLV) Error() string {
+// LV returns the original error string without label and values appended.
+func (e *ErrLV) Error() string {
 	return e.error.Error()
 }
 
-func (e *errLV) GetError() error {
+// GetError returns the original error.
+func (e *ErrLV) GetError() error {
 	return e.error
 }
 
-func (e *errLV) ToLVs() []LV {
+// ToLVs converts a ErrLV to a LV slice which can be passed to ltsv.LogWriter.Error.
+func (e *ErrLV) ToLVs() []LV {
 	return e.lvs
 }
 
@@ -94,18 +101,4 @@ func fullstack(skip int) string {
 		}
 	}
 	return string(p)
-}
-
-func formatTime(t time.Time) string {
-	buf := []byte("0000-00-00T00:00:00.000000Z")
-	year, month, day := t.Date()
-	hour, min, sec := t.Clock()
-	itoa(buf[:4], year, 4)
-	itoa(buf[5:7], int(month), 2)
-	itoa(buf[8:10], day, 2)
-	itoa(buf[11:13], hour, 2)
-	itoa(buf[14:16], min, 2)
-	itoa(buf[17:19], sec, 2)
-	itoa(buf[20:26], t.Nanosecond()/1e3, 6)
-	return string(buf)
 }

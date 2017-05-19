@@ -280,6 +280,20 @@ func appendTime(buf []byte, t time.Time) []byte {
 	return append(buf, tmp...)
 }
 
+func formatTime(t time.Time) string {
+	buf := []byte("0000-00-00T00:00:00.000000Z")
+	year, month, day := t.Date()
+	hour, min, sec := t.Clock()
+	itoa(buf[:4], year, 4)
+	itoa(buf[5:7], int(month), 2)
+	itoa(buf[8:10], day, 2)
+	itoa(buf[11:13], hour, 2)
+	itoa(buf[14:16], min, 2)
+	itoa(buf[17:19], sec, 2)
+	itoa(buf[20:26], t.Nanosecond()/1e3, 6)
+	return string(buf)
+}
+
 // Cheap integer to fixed-width decimal ASCII.  Give a negative width to avoid zero-padding.
 // Copied from https://github.com/golang/go/blob/go1.8.1/src/log/log.go#L75-L90
 // and modified for ltsvlog.
