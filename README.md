@@ -26,31 +26,32 @@ func main() {
 	}
 	ltsvlog.Logger.Info(ltsvlog.LV{"msg", "hello, world"}, ltsvlog.LV{"key", "key1"},
 		ltsvlog.LV{"value", "value1"})
-	a()
+
+	err := a()
+	if err != nil {
+		ltsvlog.Logger.Err(err)
+	}
+
 	ltsvlog.Logger.Info(ltsvlog.LV{"msg", "goodbye, world"}, ltsvlog.LV{"foo", "bar"},
 		ltsvlog.LV{"nilValue", nil}, ltsvlog.LV{"bytes", []byte("a/b")})
 }
 
-func a() {
-	b()
+func a() error {
+	return b()
 }
 
-func b() {
-	err := errors.New("demo error")
-	if err != nil {
-		ltsvlog.Logger.ErrorWithStack(ltsvlog.LV{"err", err})
-	}
+func b() error {
+	return ltsvlog.Err(errors.New("some error")).Time().LV("key1", "value1").Stack()
 }
 ```
 
 An example output:
 
 ```
-$ go run cmd/example/main.go
-time:2017-05-05T14:55:30.326842Z        level:Debug     msg:This is a debug message     key:key1       intValue:234
-time:2017-05-05T14:55:30.326858Z        level:Info      msg:hello, world        key:key1      value:value1
-time:2017-05-05T14:55:30.326905Z        level:Error     err:demo error  stack:[main.b() /home/hnakamur/go/src/github.com/hnakamur/ltsvlog/cmd/example/main.go:28 +0xd6],[main.a() /home/hnakamur/go/src/github.com/hnakamur/ltsvlog/cmd/example/main.go:22 +0x20],[main.main() /home/hnakamur/go/src/github.com/hnakamur/ltsvlog/cmd/example/main.go:16 +0x1fb]
-time:2017-05-05T14:55:30.326937Z        level:Info      msg:goodbye, world      foo:bar nilValue:<nil> bytes:0x612f62
+time:2017-05-19T21:01:17.660840Z	level:Debug	msg:This is a debug message	key:key1	intValue:234
+time:2017-05-19T21:01:17.660871Z	level:Info	msg:hello, world	key:key1	value:value1
+time:2017-05-19T21:01:17.660918Z	level:Error	err:some error	errtime:2017-05-20T06:01:17.660877Z	key1:value1	stack:[main.b(0x3, 0xc42006e0f8) /home/hnakamur/go/src/github.com/hnakamur/ltsvlog/example/main.go:31 +0x26b],[main.a(0xc42006e080, 0xc420041e38) /home/hnakamur/go/src/github.com/hnakamur/ltsvlog/example/main.go:27 +0x22],[main.main() /home/hnakamur/go/src/github.com/hnakamur/ltsvlog/example/main.go:17 +0x1fb]
+time:2017-05-19T21:01:17.660942Z	level:Info	msg:goodbye, world	foo:bar	nilValue:<nil>	bytes:0x612f62
 ```
 
 Since these log lines ar long, please scroll horizontally to the right to see all the output.
