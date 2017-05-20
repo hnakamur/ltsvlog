@@ -3,8 +3,17 @@ package ltsvlog
 import (
 	"bytes"
 	"runtime"
+	"sync"
 	"time"
 )
+
+var errLVPool = &sync.Pool{
+	New: func() interface{} {
+		return &ErrLV{
+			lvs: make([]LV, 0, 8),
+		}
+	},
+}
 
 // ErrLV is an error with label and value pairs.
 //
@@ -24,10 +33,9 @@ type ErrLV struct {
 
 // Err creates an ErrLV with the specified error.
 func Err(err error) *ErrLV {
-	e := &ErrLV{
-		error: err,
-		lvs:   make([]LV, 0, 8),
-	}
+	e := errLVPool.Get().(*ErrLV)
+	e.error = err
+	e.lvs = e.lvs[:0]
 	e.lvs = append(e.lvs, LV{"err", err})
 	return e
 }

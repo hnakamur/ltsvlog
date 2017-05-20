@@ -228,6 +228,7 @@ func (l *LTSVLogger) Err(err error) {
 	errLV, ok := err.(*ErrLV)
 	if ok {
 		lv = errLV.toLVs()
+		defer errLVPool.Put(errLV)
 	} else {
 		lv = []LV{{"err", err}}
 	}
