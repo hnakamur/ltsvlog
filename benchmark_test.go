@@ -18,7 +18,7 @@ func BenchmarkInfo(b *testing.B) {
 
 	logger := ltsvlog.NewLTSVLogger(tmpfile, false)
 	for i := 0; i < b.N; i++ {
-		logger.Info(ltsvlog.LV{"msg", "hello"}, ltsvlog.LV{"key1", "value1"})
+		logger.LV("msg", "hello").LV("key1", "value1").Info()
 	}
 }
 

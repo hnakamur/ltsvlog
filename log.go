@@ -201,6 +201,16 @@ func (l *LTSVLogger) Error(lv ...LV) {
 	l.mu.Unlock()
 }
 
+func (l *LTSVLogger) LV(key string, value interface{}) *LVs {
+	lvs := lvsPool.Get().(*LVs)
+	lvs.logger = l
+	lvs.buf = lvs.buf[:0]
+	lvs.buf = append(lvs.buf, key...)
+	lvs.buf = append(lvs.buf, ':')
+	lvs.buf = l.appendValueFunc(lvs.buf, value)
+	return lvs
+}
+
 // Deprecated. Use Err instead.
 //
 // ErrorWithStack writes a log and a stack with the error level.
@@ -233,9 +243,6 @@ func (l *LTSVLogger) rawLog(level string, buf []byte) {
 	// Note: To reuse the buffer, create an empty slice pointing to
 	// the previously allocated buffer.
 	b := l.appendPrefixFunc(l.buf[:0], level)
-	if len(b) > 0 {
-		b = append(b, '\t')
-	}
 	b = append(b, buf...)
 	b = append(b, '\n')
 	_, _ = l.writer.Write(b)
