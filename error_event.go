@@ -50,8 +50,12 @@ func Err(err error) *ErrorEvent {
 }
 
 // Stack appends a stacktrace with label "stack" to ErrorEvent.
+// If label is empty, "stack" is used.
 func (e *ErrorEvent) Stack(label string) *ErrorEvent {
 	e.buf = append(e.buf, '\t')
+	if label == "" {
+		label = "stack"
+	}
 	e.buf = append(e.buf, label...)
 	e.buf = append(e.buf, ':')
 	e.buf = appendStack(e.buf, 2)
