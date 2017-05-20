@@ -254,30 +254,31 @@ func (l *LTSVLogger) log(level string, lv ...LV) {
 
 func appendPrefixFunc(timeLabel, levelLabel string) AppendPrefixFunc {
 	if timeLabel != "" && levelLabel != "" {
-		timeLabelBytes := []byte(timeLabel + ":")
-		levelLabelBytes := []byte("\t" + levelLabel + ":")
 		return func(buf []byte, level string) []byte {
-			buf = append(buf, timeLabelBytes...)
+			buf = append(buf, timeLabel...)
+			buf = append(buf, ':')
 			now := time.Now().UTC()
 			buf = appendTime(buf, now)
-			buf = append(buf, levelLabelBytes...)
+			buf = append(buf, '\t')
+			buf = append(buf, levelLabel...)
+			buf = append(buf, ':')
 			buf = append(buf, []byte(level)...)
 			buf = append(buf, '\t')
 			return buf
 		}
 	} else if timeLabel != "" && levelLabel == "" {
-		timeLabelBytes := []byte(timeLabel + ":")
 		return func(buf []byte, level string) []byte {
-			buf = append(buf, timeLabelBytes...)
+			buf = append(buf, timeLabel...)
+			buf = append(buf, ':')
 			now := time.Now().UTC()
 			buf = appendTime(buf, now)
 			buf = append(buf, '\t')
 			return buf
 		}
 	} else if timeLabel == "" && levelLabel != "" {
-		levelLabelBytes := []byte(levelLabel + ":")
 		return func(buf []byte, level string) []byte {
-			buf = append(buf, levelLabelBytes...)
+			buf = append(buf, levelLabel...)
+			buf = append(buf, ':')
 			buf = append(buf, []byte(level)...)
 			buf = append(buf, '\t')
 			return buf
