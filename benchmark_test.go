@@ -9,19 +9,6 @@ import (
 	"github.com/hnakamur/ltsvlog"
 )
 
-func BenchmarkLogInfo(b *testing.B) {
-	tmpfile, err := ioutil.TempFile("", "benchmark")
-	if err != nil {
-		b.Fatal(err)
-	}
-	defer os.Remove(tmpfile.Name())
-
-	logger := ltsvlog.NewLTSVLogger(tmpfile, false)
-	for i := 0; i < b.N; i++ {
-		logger.Log(ltsvlog.Info().LV("msg", "hello").LV("key1", "value1"))
-	}
-}
-
 func BenchmarkInfo(b *testing.B) {
 	tmpfile, err := ioutil.TempFile("", "benchmark")
 	if err != nil {
