@@ -15,12 +15,15 @@ var eventPool = &sync.Pool{
 	},
 }
 
+// Event is a temporary object for building a log record of
+// Debug or Info level.
 type Event struct {
 	logger  *LTSVLogger
 	enabled bool
 	buf     []byte
 }
 
+// String appends a labeled string value to Event.
 func (e *Event) String(label string, value string) *Event {
 	if !e.enabled {
 		return e
@@ -32,6 +35,7 @@ func (e *Event) String(label string, value string) *Event {
 	return e
 }
 
+// Hex appends a labeled hex value to Event.
 func (e *Event) Hex(label string, value []byte) *Event {
 	if !e.enabled {
 		return e
@@ -43,6 +47,7 @@ func (e *Event) Hex(label string, value []byte) *Event {
 	return e
 }
 
+// Sprintf appends a labeled formatted string value to Event.
 func (e *Event) Sprintf(label, format string, a ...interface{}) *Event {
 	if !e.enabled {
 		return e
@@ -54,6 +59,7 @@ func (e *Event) Sprintf(label, format string, a ...interface{}) *Event {
 	return e
 }
 
+// Bool appends a labeled bool value to Event.
 func (e *Event) Bool(label string, value bool) *Event {
 	if !e.enabled {
 		return e
@@ -65,6 +71,7 @@ func (e *Event) Bool(label string, value bool) *Event {
 	return e
 }
 
+// Int64 appends a labeled int64 value to Event.
 func (e *Event) Int64(label string, value int64) *Event {
 	if !e.enabled {
 		return e
@@ -76,6 +83,7 @@ func (e *Event) Int64(label string, value int64) *Event {
 	return e
 }
 
+// Uint64 appends a labeled uint64 value to Event.
 func (e *Event) Uint64(label string, value uint64) *Event {
 	if !e.enabled {
 		return e
@@ -87,6 +95,7 @@ func (e *Event) Uint64(label string, value uint64) *Event {
 	return e
 }
 
+// Float32 appends a labeled float32 value to Event.
 func (e *Event) Float32(label string, value float32) *Event {
 	if !e.enabled {
 		return e
@@ -98,6 +107,7 @@ func (e *Event) Float32(label string, value float32) *Event {
 	return e
 }
 
+// Float64 appends a labeled float64 value to Event.
 func (e *Event) Float64(label string, value float64) *Event {
 	if !e.enabled {
 		return e
@@ -109,6 +119,7 @@ func (e *Event) Float64(label string, value float64) *Event {
 	return e
 }
 
+// UTCTime appends a labeled UTC time value to Event.
 func (e *Event) UTCTime(label string, value time.Time) *Event {
 	if !e.enabled {
 		return e
@@ -120,6 +131,7 @@ func (e *Event) UTCTime(label string, value time.Time) *Event {
 	return e
 }
 
+// Log write this event if the logger which created this event is enabled.
 func (e *Event) Log() {
 	if e.enabled {
 		e.buf[len(e.buf)-1] = '\n'

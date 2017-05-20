@@ -18,6 +18,8 @@ var errorEventPool = &sync.Pool{
 }
 
 // ErrorEvent is an error with label and value pairs.
+// *ErrroEvent implements the error interface so you can
+// return *ErrorEvent as an error.
 //
 // This is useful when you would like to log an error with
 // additional labeled values later at the higher level of
@@ -25,7 +27,11 @@ var errorEventPool = &sync.Pool{
 //
 // ErrorEvent frees lower level functions from depending on loggers
 // since ErrorEvent is just a data structure which holds
-// an error, a stacktrace and labeld values.
+// an error, a stacktrace and labeled values.
+//
+// However LTSVLogger.Err depends on the internal structure
+// of ErrorEvent, so you cannnot use ErrorEvent with the
+// other logging library than this package.
 //
 // Please see the example at LTSVLogger.Err for an example usage.
 type ErrorEvent struct {
@@ -52,6 +58,7 @@ func (e *ErrorEvent) Stack(label string) *ErrorEvent {
 	return e
 }
 
+// String appends a labeled string value to ErrorEvent.
 func (e *ErrorEvent) String(label string, value string) *ErrorEvent {
 	e.buf = append(e.buf, '\t')
 	e.buf = append(e.buf, label...)
@@ -60,6 +67,7 @@ func (e *ErrorEvent) String(label string, value string) *ErrorEvent {
 	return e
 }
 
+// Hex appends a labeled hex value to ErrorEvent.
 func (e *ErrorEvent) Hex(label string, value []byte) *ErrorEvent {
 	e.buf = append(e.buf, '\t')
 	e.buf = append(e.buf, label...)
@@ -68,6 +76,7 @@ func (e *ErrorEvent) Hex(label string, value []byte) *ErrorEvent {
 	return e
 }
 
+// Sprintf appends a labeled formatted string value to ErrorEvent.
 func (e *ErrorEvent) Sprintf(label, format string, a ...interface{}) *ErrorEvent {
 	e.buf = append(e.buf, '\t')
 	e.buf = append(e.buf, label...)
@@ -76,6 +85,7 @@ func (e *ErrorEvent) Sprintf(label, format string, a ...interface{}) *ErrorEvent
 	return e
 }
 
+// Bool appends a labeled bool value to ErrorEvent.
 func (e *ErrorEvent) Bool(label string, value bool) *ErrorEvent {
 	e.buf = append(e.buf, '\t')
 	e.buf = append(e.buf, label...)
@@ -84,6 +94,7 @@ func (e *ErrorEvent) Bool(label string, value bool) *ErrorEvent {
 	return e
 }
 
+// Int64 appends a labeled int64 value to ErrorEvent.
 func (e *ErrorEvent) Int64(label string, value int64) *ErrorEvent {
 	e.buf = append(e.buf, '\t')
 	e.buf = append(e.buf, label...)
@@ -92,6 +103,7 @@ func (e *ErrorEvent) Int64(label string, value int64) *ErrorEvent {
 	return e
 }
 
+// Uint64 appends a labeled uint64 value to ErrorEvent.
 func (e *ErrorEvent) Uint64(label string, value uint64) *ErrorEvent {
 	e.buf = append(e.buf, '\t')
 	e.buf = append(e.buf, label...)
@@ -100,6 +112,7 @@ func (e *ErrorEvent) Uint64(label string, value uint64) *ErrorEvent {
 	return e
 }
 
+// Float32 appends a labeled float32 value to ErrorEvent.
 func (e *ErrorEvent) Float32(label string, value float32) *ErrorEvent {
 	e.buf = append(e.buf, '\t')
 	e.buf = append(e.buf, label...)
@@ -108,6 +121,7 @@ func (e *ErrorEvent) Float32(label string, value float32) *ErrorEvent {
 	return e
 }
 
+// Float64 appends a labeled float64 value to ErrorEvent.
 func (e *ErrorEvent) Float64(label string, value float64) *ErrorEvent {
 	e.buf = append(e.buf, '\t')
 	e.buf = append(e.buf, label...)
@@ -116,6 +130,7 @@ func (e *ErrorEvent) Float64(label string, value float64) *ErrorEvent {
 	return e
 }
 
+// UTCTime appends a labeled UTC time value to ErrorEvent.
 func (e *ErrorEvent) UTCTime(label string, value time.Time) *ErrorEvent {
 	e.buf = append(e.buf, '\t')
 	e.buf = append(e.buf, label...)
@@ -124,13 +139,13 @@ func (e *ErrorEvent) UTCTime(label string, value time.Time) *ErrorEvent {
 	return e
 }
 
-// LV returns the error string with labeled values in the LTSV format.
+// Error returns the error string with labeled values in the LTSV format.
 func (e *ErrorEvent) Error() string {
 	return string(e.buf)
 }
 
-// GetError returns the original error.
-func (e *ErrorEvent) GetError() error {
+// OriginalError returns the original error.
+func (e *ErrorEvent) OriginalError() error {
 	return e.error
 }
 
