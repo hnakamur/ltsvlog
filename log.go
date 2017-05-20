@@ -428,6 +428,13 @@ func appendHexBytes(buf []byte, v []byte) []byte {
 	return buf
 }
 
+func appendHexByte(buf []byte, b byte) []byte {
+	buf = append(buf, "0x"...)
+	buf = append(buf, digits[b/16])
+	buf = append(buf, digits[b%16])
+	return buf
+}
+
 // Logger is the global logger.
 // You can change this logger like
 // ltsvlog.Logger = ltsvlog.NewLTSVLogger(os.Stdout, false)

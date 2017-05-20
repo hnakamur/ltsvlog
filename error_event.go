@@ -71,8 +71,17 @@ func (e *ErrorEvent) String(label string, value string) *ErrorEvent {
 	return e
 }
 
-// Hex appends a labeled hex value to ErrorEvent.
-func (e *ErrorEvent) Hex(label string, value []byte) *ErrorEvent {
+// Byte appends a labeled byte value to ErrorEvent.
+func (e *ErrorEvent) Byte(label string, value byte) *ErrorEvent {
+	e.buf = append(e.buf, '\t')
+	e.buf = append(e.buf, label...)
+	e.buf = append(e.buf, ':')
+	e.buf = appendHexByte(e.buf, value)
+	return e
+}
+
+// Bytes appends a labeled bytes value to ErrorEvent.
+func (e *ErrorEvent) Bytes(label string, value []byte) *ErrorEvent {
 	e.buf = append(e.buf, '\t')
 	e.buf = append(e.buf, label...)
 	e.buf = append(e.buf, ':')
@@ -98,6 +107,26 @@ func (e *ErrorEvent) Bool(label string, value bool) *ErrorEvent {
 	return e
 }
 
+// Int appends a labeled int value to ErrorEvent.
+func (e *ErrorEvent) Int(label string, value int) *ErrorEvent {
+	return e.Int64(label, int64(value))
+}
+
+// Int8 appends a labeled int8 value to ErrorEvent.
+func (e *ErrorEvent) Int8(label string, value int8) *ErrorEvent {
+	return e.Int64(label, int64(value))
+}
+
+// Int16 appends a labeled int16 value to ErrorEvent.
+func (e *ErrorEvent) Int16(label string, value int16) *ErrorEvent {
+	return e.Int64(label, int64(value))
+}
+
+// Int32 appends a labeled int32 value to ErrorEvent.
+func (e *ErrorEvent) Int32(label string, value int32) *ErrorEvent {
+	return e.Int64(label, int64(value))
+}
+
 // Int64 appends a labeled int64 value to ErrorEvent.
 func (e *ErrorEvent) Int64(label string, value int64) *ErrorEvent {
 	e.buf = append(e.buf, '\t')
@@ -105,6 +134,26 @@ func (e *ErrorEvent) Int64(label string, value int64) *ErrorEvent {
 	e.buf = append(e.buf, ':')
 	e.buf = strconv.AppendInt(e.buf, value, 10)
 	return e
+}
+
+// Uint appends a labeled uint value to ErrorEvent.
+func (e *ErrorEvent) Uint(label string, value uint) *ErrorEvent {
+	return e.Uint64(label, uint64(value))
+}
+
+// Uint8 appends a labeled uint8 value to ErrorEvent.
+func (e *ErrorEvent) Uint8(label string, value uint8) *ErrorEvent {
+	return e.Uint64(label, uint64(value))
+}
+
+// Uint16 appends a labeled uint16 value to ErrorEvent.
+func (e *ErrorEvent) Uint16(label string, value uint16) *ErrorEvent {
+	return e.Uint64(label, uint64(value))
+}
+
+// Uint32 appends a labeled uint32 value to ErrorEvent.
+func (e *ErrorEvent) Uint32(label string, value uint32) *ErrorEvent {
+	return e.Uint64(label, uint64(value))
 }
 
 // Uint64 appends a labeled uint64 value to ErrorEvent.

@@ -35,8 +35,8 @@ func (e *Event) String(label string, value string) *Event {
 	return e
 }
 
-// Hex appends a labeled hex value to Event.
-func (e *Event) Hex(label string, value []byte) *Event {
+// Bytes appends a labeled bytes value to Event.
+func (e *Event) Bytes(label string, value []byte) *Event {
 	if !e.enabled {
 		return e
 	}
@@ -71,6 +71,38 @@ func (e *Event) Bool(label string, value bool) *Event {
 	return e
 }
 
+// Byte appends a labeled byte value to Event.
+func (e *Event) Byte(label string, value byte) *Event {
+	if !e.enabled {
+		return e
+	}
+	e.buf = append(e.buf, label...)
+	e.buf = append(e.buf, ':')
+	e.buf = appendHexByte(e.buf, value)
+	e.buf = append(e.buf, '\t')
+	return e
+}
+
+// Int appends a labeled int value to Event.
+func (e *Event) Int(label string, value int) *Event {
+	return e.Int64(label, int64(value))
+}
+
+// Int8 appends a labeled int8 value to Event.
+func (e *Event) Int8(label string, value int8) *Event {
+	return e.Int64(label, int64(value))
+}
+
+// Int16 appends a labeled int16 value to Event.
+func (e *Event) Int16(label string, value int16) *Event {
+	return e.Int64(label, int64(value))
+}
+
+// Int32 appends a labeled int32 value to Event.
+func (e *Event) Int32(label string, value int32) *Event {
+	return e.Int64(label, int64(value))
+}
+
 // Int64 appends a labeled int64 value to Event.
 func (e *Event) Int64(label string, value int64) *Event {
 	if !e.enabled {
@@ -81,6 +113,26 @@ func (e *Event) Int64(label string, value int64) *Event {
 	e.buf = strconv.AppendInt(e.buf, value, 10)
 	e.buf = append(e.buf, '\t')
 	return e
+}
+
+// Uint appends a labeled uint value to Event.
+func (e *Event) Uint(label string, value uint) *Event {
+	return e.Uint64(label, uint64(value))
+}
+
+// Uint8 appends a labeled uint8 value to Event.
+func (e *Event) Uint8(label string, value uint8) *Event {
+	return e.Uint64(label, uint64(value))
+}
+
+// Uint16 appends a labeled uint16 value to Event.
+func (e *Event) Uint16(label string, value uint16) *Event {
+	return e.Uint64(label, uint64(value))
+}
+
+// Uint32 appends a labeled uint32 value to Event.
+func (e *Event) Uint32(label string, value uint32) *Event {
+	return e.Uint64(label, uint64(value))
 }
 
 // Uint64 appends a labeled uint64 value to Event.

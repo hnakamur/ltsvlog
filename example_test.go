@@ -20,7 +20,7 @@ func ExampleLTSVLogger_Debug() {
 	if ltsvlog.Logger.DebugEnabled() {
 		n := 234
 		ltsvlog.Logger.Debug().String("msg", "This is a debug message").
-			String("key", "key1").Int64("intValue", int64(n)).Log()
+			String("key", "key1").Int("intValue", n).Log()
 	}
 
 	// Output example:
