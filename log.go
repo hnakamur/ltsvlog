@@ -254,22 +254,22 @@ func (l *LTSVLogger) ErrorWithStack(lv ...LV) {
 }
 
 // Err writes a log for an error with the error level.
-// If err is a *ErrLVs, this logs the error with labeled values.
-// If err is not a *ErrLVs, this logs the error with the label "err".
+// If err is a *ErrorEvent, this logs the error with labeled values.
+// If err is not a *ErrorEvent, this logs the error with the label "err".
 func (l *LTSVLogger) Err(err error) {
-	errLVs, ok := err.(*ErrLVs)
+	errorEvent, ok := err.(*ErrorEvent)
 	if !ok {
-		errLVs = Err(err)
+		errorEvent = Err(err)
 	}
 	buf := make([]byte, 8192)
 	buf = l.appendPrefixFunc(buf[:0], "Error")
 	if len(buf) > 0 {
 		buf = append(buf, '\t')
 	}
-	buf = append(buf, errLVs.buf...)
+	buf = append(buf, errorEvent.buf...)
 	buf = append(buf, '\n')
 	_, _ = l.writer.Write(buf)
-	errLVsPool.Put(errLVs)
+	errorEventPool.Put(errorEvent)
 }
 
 func (l *LTSVLogger) log(level string, lv ...LV) {
