@@ -197,8 +197,9 @@ func (e *ErrorEvent) Time(label string, value time.Time, format string) *ErrorEv
 	return e
 }
 
-// UTCTime appends a labeled UTC time value to ErrorEvent.
-// The format is the same as the log time field value.
+// UTCTime appends a labeled time value to ErrorEvent.
+// The time value is converted to UTC and then printed
+// in the same format as the log time field.
 func (e *ErrorEvent) UTCTime(label string, value time.Time) *ErrorEvent {
 	e.buf = append(e.buf, '\t')
 	e.buf = append(e.buf, label...)

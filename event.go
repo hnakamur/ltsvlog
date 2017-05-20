@@ -189,7 +189,8 @@ func (e *Event) Time(label string, value time.Time, format string) *Event {
 }
 
 // UTCTime appends a labeled UTC time value to Event.
-// The format is the same as the log time field value.
+// The time value is converted to UTC and then printed
+// in the same format as the log time field.
 func (e *Event) UTCTime(label string, value time.Time) *Event {
 	if !e.enabled {
 		return e
