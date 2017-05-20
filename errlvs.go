@@ -170,3 +170,9 @@ func appendStack(buf []byte, skip int) []byte {
 	bufPool.Put(src)
 	return buf
 }
+
+var bufPool = &sync.Pool{
+	New: func() interface{} {
+		return make([]byte, 8192)
+	},
+}

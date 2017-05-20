@@ -253,12 +253,6 @@ func (l *LTSVLogger) ErrorWithStack(lv ...LV) {
 	l.mu.Unlock()
 }
 
-var bufPool = &sync.Pool{
-	New: func() interface{} {
-		return make([]byte, 8192)
-	},
-}
-
 // Err writes a log for an error with the error level.
 // If err is a *ErrLVs, this logs the error with labeled values.
 // If err is not a *ErrLVs, this logs the error with the label "err".
@@ -267,7 +261,7 @@ func (l *LTSVLogger) Err(err error) {
 	if !ok {
 		errLVs = Err(err)
 	}
-	buf := bufPool.Get().([]byte)
+	buf := make([]byte, 8192)
 	buf = l.appendPrefixFunc(buf[:0], "Error")
 	if len(buf) > 0 {
 		buf = append(buf, '\t')
@@ -275,7 +269,6 @@ func (l *LTSVLogger) Err(err error) {
 	buf = append(buf, errLVs.buf...)
 	buf = append(buf, '\n')
 	_, _ = l.writer.Write(buf)
-	bufPool.Put(buf)
 	errLVsPool.Put(errLVs)
 }
 
