@@ -204,7 +204,7 @@ func (e *Event) UTCTime(label string, value time.Time) *Event {
 
 // Log write this event if the logger which created this event is enabled.
 func (e *Event) Log() {
-	if e.enabled {
+	if e.enabled && len(e.buf) > 0 {
 		e.buf[len(e.buf)-1] = '\n'
 		_, _ = e.logger.writer.Write(e.buf)
 	}
