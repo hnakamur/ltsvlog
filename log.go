@@ -216,17 +216,30 @@ func (l *LTSVLogger) ErrorWithStack(lv ...LV) {
 // If err is a *ErrLV, this logs the error with labeled values.
 // If err is not a *ErrLV, this logs the error with the label "err".
 func (l *LTSVLogger) Err(err error) {
-	var lv []LV
 	errLV, ok := err.(*ErrLV)
 	if ok {
-		lv = errLV.toLVs()
-		defer errLVPool.Put(errLV)
+		l.mu.Lock()
+		l.rawLog("Error", errLV.buf)
+		l.mu.Unlock()
+		errLVPool.Put(errLV)
 	} else {
-		lv = []LV{{"err", err}}
+		l.mu.Lock()
+		l.log("Error", LV{"err", err})
+		l.mu.Unlock()
 	}
-	l.mu.Lock()
-	l.log("Error", lv...)
-	l.mu.Unlock()
+}
+
+func (l *LTSVLogger) rawLog(level string, buf []byte) {
+	// Note: To reuse the buffer, create an empty slice pointing to
+	// the previously allocated buffer.
+	b := l.appendPrefixFunc(l.buf[:0], level)
+	if len(b) > 0 {
+		b = append(b, '\t')
+	}
+	b = append(b, buf...)
+	b = append(b, '\n')
+	_, _ = l.writer.Write(b)
+	l.buf = b
 }
 
 func (l *LTSVLogger) log(level string, lv ...LV) {
@@ -306,20 +319,6 @@ func appendTime(buf []byte, t time.Time) []byte {
 	itoa(tmp[17:19], sec, 2)
 	itoa(tmp[20:26], t.Nanosecond()/1e3, 6)
 	return append(buf, tmp...)
-}
-
-func formatTime(t time.Time) string {
-	buf := []byte("0000-00-00T00:00:00.000000Z")
-	year, month, day := t.Date()
-	hour, min, sec := t.Clock()
-	itoa(buf[:4], year, 4)
-	itoa(buf[5:7], int(month), 2)
-	itoa(buf[8:10], day, 2)
-	itoa(buf[11:13], hour, 2)
-	itoa(buf[14:16], min, 2)
-	itoa(buf[17:19], sec, 2)
-	itoa(buf[20:26], t.Nanosecond()/1e3, 6)
-	return string(buf)
 }
 
 // Cheap integer to fixed-width decimal ASCII.  Give a negative width to avoid zero-padding.
