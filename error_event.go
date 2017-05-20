@@ -45,7 +45,7 @@ func Err(err error) *ErrorEvent {
 	e.error = err
 	e.buf = e.buf[:0]
 	e.buf = append(e.buf, "err:"...)
-	e.buf = append(e.buf, escape(fmt.Sprintf("%+v", err))...)
+	e.buf = append(e.buf, escape(err.Error())...)
 	return e
 }
 
