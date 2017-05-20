@@ -263,9 +263,6 @@ func (l *LTSVLogger) Err(err error) {
 	}
 	buf := make([]byte, 8192)
 	buf = l.appendPrefixFunc(buf[:0], "Error")
-	if len(buf) > 0 {
-		buf = append(buf, '\t')
-	}
 	buf = append(buf, errorEvent.buf...)
 	buf = append(buf, '\n')
 	_, _ = l.writer.Write(buf)
@@ -277,12 +274,12 @@ func (l *LTSVLogger) log(level string, lv ...LV) {
 	// the previously allocated buffer.
 	buf := l.appendPrefixFunc(l.buf[:0], level)
 	for _, labelAndVal := range lv {
-		buf = append(buf, '\t')
 		buf = append(buf, labelAndVal.L...)
 		buf = append(buf, ':')
 		buf = l.appendValueFunc(buf, labelAndVal.V)
+		buf = append(buf, '\t')
 	}
-	buf = append(buf, '\n')
+	buf[len(buf)-1] = '\n'
 	_, _ = l.writer.Write(buf)
 	l.buf = buf
 }
@@ -298,6 +295,7 @@ func appendPrefixFunc(timeLabel, levelLabel string) AppendPrefixFunc {
 			buf = append(buf, levelLabel...)
 			buf = append(buf, ':')
 			buf = append(buf, level...)
+			buf = append(buf, '\t')
 			return buf
 		}
 	} else if timeLabel != "" && levelLabel == "" {
@@ -306,6 +304,7 @@ func appendPrefixFunc(timeLabel, levelLabel string) AppendPrefixFunc {
 			buf = append(buf, ':')
 			now := time.Now().UTC()
 			buf = appendUTCTime(buf, now)
+			buf = append(buf, '\t')
 			return buf
 		}
 	} else if timeLabel == "" && levelLabel != "" {
@@ -313,6 +312,7 @@ func appendPrefixFunc(timeLabel, levelLabel string) AppendPrefixFunc {
 			buf = append(buf, levelLabel...)
 			buf = append(buf, ':')
 			buf = append(buf, level...)
+			buf = append(buf, '\t')
 			return buf
 		}
 	} else {
