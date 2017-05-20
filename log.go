@@ -244,7 +244,7 @@ func (l *LTSVLogger) log(level string, lv ...LV) {
 		if i > 0 {
 			buf = append(buf, '\t')
 		}
-		buf = append(buf, []byte(labelAndVal.L)...)
+		buf = append(buf, labelAndVal.L...)
 		buf = append(buf, ':')
 		buf = l.appendValueFunc(buf, labelAndVal.V)
 	}
@@ -263,7 +263,7 @@ func appendPrefixFunc(timeLabel, levelLabel string) AppendPrefixFunc {
 			buf = append(buf, '\t')
 			buf = append(buf, levelLabel...)
 			buf = append(buf, ':')
-			buf = append(buf, []byte(level)...)
+			buf = append(buf, level...)
 			buf = append(buf, '\t')
 			return buf
 		}
@@ -280,7 +280,7 @@ func appendPrefixFunc(timeLabel, levelLabel string) AppendPrefixFunc {
 		return func(buf []byte, level string) []byte {
 			buf = append(buf, levelLabel...)
 			buf = append(buf, ':')
-			buf = append(buf, []byte(level)...)
+			buf = append(buf, level...)
 			buf = append(buf, '\t')
 			return buf
 		}
@@ -296,7 +296,7 @@ func appendPrefix(buf []byte, level string) []byte {
 	now := time.Now().UTC()
 	buf = appendTime(buf, now)
 	buf = append(buf, "\tlevel:"...)
-	buf = append(buf, []byte(level)...)
+	buf = append(buf, level...)
 	buf = append(buf, '\t')
 	return buf
 }
@@ -360,7 +360,7 @@ func appendValue(buf []byte, v interface{}) []byte {
 	case nil:
 		buf = append(buf, "<nil>"...)
 	case string:
-		buf = append(buf, []byte(escape(v.(string)))...)
+		buf = append(buf, escape(v.(string))...)
 	case int:
 		buf = strconv.AppendInt(buf, int64(v.(int)), 10)
 	case uint:
@@ -382,9 +382,9 @@ func appendValue(buf []byte, v interface{}) []byte {
 	case uint64:
 		buf = strconv.AppendUint(buf, v.(uint64), 10)
 	case float32:
-		buf = append(buf, []byte(strconv.FormatFloat(float64(v.(float32)), 'g', -1, 32))...)
+		buf = append(buf, strconv.FormatFloat(float64(v.(float32)), 'g', -1, 32)...)
 	case float64:
-		buf = append(buf, []byte(strconv.FormatFloat(v.(float64), 'g', -1, 64))...)
+		buf = append(buf, strconv.FormatFloat(v.(float64), 'g', -1, 64)...)
 	case bool:
 		buf = strconv.AppendBool(buf, v.(bool))
 	case uintptr:
@@ -392,9 +392,9 @@ func appendValue(buf []byte, v interface{}) []byte {
 	case []byte:
 		buf = appendHexBytes(buf, v.([]byte))
 	case fmt.Stringer:
-		buf = append(buf, []byte(escape(v.(fmt.Stringer).String()))...)
+		buf = append(buf, escape(v.(fmt.Stringer).String())...)
 	default:
-		buf = append(buf, []byte(escape(fmt.Sprintf("%+v", v)))...)
+		buf = append(buf, escape(fmt.Sprintf("%+v", v))...)
 	}
 	return buf
 }
