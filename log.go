@@ -130,6 +130,7 @@ func NewLTSVLogger(w io.Writer, debugEnabled bool, options ...Option) *LTSVLogge
 		levelLabel:       defaultLevelLabel,
 		appendPrefixFunc: defaultAppendPrefixFunc,
 		appendValueFunc:  appendValue,
+		buf:              make([]byte, 1024),
 		stackBuf:         make([]byte, 8192),
 	}
 	for _, o := range options {
