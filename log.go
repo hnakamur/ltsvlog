@@ -28,6 +28,8 @@ import (
 	"time"
 )
 
+// Deprecated.
+//
 // LV represents a label L and a value V.
 type LV struct {
 	L string
@@ -37,8 +39,8 @@ type LV struct {
 // LogWriter is a LTSV logger interface
 type LogWriter interface {
 	DebugEnabled() bool
-	Debug(lv ...LV)
-	Info(lv ...LV)
+	Debug(lv ...LV) *LVs
+	Info(lv ...LV) *LVs
 	Err(err error)
 
 	Error(lv ...LV)
@@ -87,6 +89,8 @@ func SetLevelLabel(label string) Option {
 	}
 }
 
+// Deprecated.
+//
 // SetAppendValue returns the option function to set the function
 // to append a value.
 func SetAppendValue(f AppendValueFunc) Option {
@@ -101,6 +105,8 @@ func SetAppendValue(f AppendValueFunc) Option {
 // for a log record to a byte buffer and returns the result buffer.
 type AppendPrefixFunc func(buf []byte, level string) []byte
 
+// Deprecated.
+//
 // AppendValueFunc is a function type for appending a value to
 // a byte buffer and returns the result buffer.
 type AppendValueFunc func(buf []byte, v interface{}) []byte
@@ -173,23 +179,58 @@ func (l *LTSVLogger) DebugEnabled() bool {
 	return l.debugEnabled
 }
 
-// Debug writes a log with the debug level if the debug level is enabled.
+// Debug is used to get a LVs for writing a Debug level log.
 //
 // Note there still exists the cost of evaluating argument values if the debug level is disabled, even though those arguments are not used.
 // So guarding with if and DebugEnabled is recommended.
-func (l *LTSVLogger) Debug(lv ...LV) {
-	if l.debugEnabled {
-		l.mu.Lock()
-		l.log("Debug", lv...)
-		l.mu.Unlock()
+//
+// Passing one more lv is deprecated. This is left for backward
+// compatiblity for a while and it will not be supported in future version.
+// This means the signature of thie method will be changed to
+// func (l *LTSVLogger) Debug() *LVs
+func (l *LTSVLogger) Debug(lv ...LV) *LVs {
+	if len(lv) == 0 {
+		lvs := lvsPool.Get().(*LVs)
+		lvs.logger = l
+		lvs.enabled = l.debugEnabled
+		lvs.buf = lvs.buf[:0]
+		if lvs.enabled {
+			lvs.buf = l.appendPrefixFunc(lvs.buf, "Debug")
+		}
+		return lvs
+	} else {
+		// NOTE: This code is left for backward compatibility.
+		// TODO: Remove this code in a later version.
+
+		if l.debugEnabled {
+			l.mu.Lock()
+			l.log("Debug", lv...)
+			l.mu.Unlock()
+		}
+		return nil
 	}
 }
 
-// Info writes a log with the info level.
-func (l *LTSVLogger) Info(lv ...LV) {
-	l.mu.Lock()
-	l.log("Info", lv...)
-	l.mu.Unlock()
+// Info is used to get a LVs for writing a Info level log.
+//
+// Passing one more lv is deprecated. This is left for backward
+// compatiblity for a while and it will not be supported in future version.
+// This means the signature of thie method will be changed to
+// func (l *LTSVLogger) Info() *LVs
+func (l *LTSVLogger) Info(lv ...LV) *LVs {
+	if len(lv) == 0 {
+		lvs := lvsPool.Get().(*LVs)
+		lvs.logger = l
+		lvs.enabled = true
+		lvs.buf = lvs.buf[:0]
+		lvs.buf = l.appendPrefixFunc(lvs.buf, "Info")
+		return lvs
+	} else {
+		l.mu.Lock()
+		l.log("Info", lv...)
+		l.mu.Unlock()
+		return nil
+	}
 }
 
 // Deprecated. Use Err instead.
@@ -199,16 +240,6 @@ func (l *LTSVLogger) Error(lv ...LV) {
 	l.mu.Lock()
 	l.log("Error", lv...)
 	l.mu.Unlock()
-}
-
-func (l *LTSVLogger) LV(key string, value interface{}) *LVs {
-	lvs := lvsPool.Get().(*LVs)
-	lvs.logger = l
-	lvs.buf = lvs.buf[:0]
-	lvs.buf = append(lvs.buf, key...)
-	lvs.buf = append(lvs.buf, ':')
-	lvs.buf = l.appendValueFunc(lvs.buf, value)
-	return lvs
 }
 
 // Deprecated. Use Err instead.
@@ -222,41 +253,38 @@ func (l *LTSVLogger) ErrorWithStack(lv ...LV) {
 	l.mu.Unlock()
 }
 
-// Err writes a log for an error with the error level.
-// If err is a *ErrLV, this logs the error with labeled values.
-// If err is not a *ErrLV, this logs the error with the label "err".
-func (l *LTSVLogger) Err(err error) {
-	errLV, ok := err.(*ErrLV)
-	if ok {
-		l.mu.Lock()
-		l.rawLog("Error", errLV.buf)
-		l.mu.Unlock()
-		errLVPool.Put(errLV)
-	} else {
-		l.mu.Lock()
-		l.log("Error", LV{"err", err})
-		l.mu.Unlock()
-	}
+var bufPool = &sync.Pool{
+	New: func() interface{} {
+		return make([]byte, 8192)
+	},
 }
 
-func (l *LTSVLogger) rawLog(level string, buf []byte) {
-	// Note: To reuse the buffer, create an empty slice pointing to
-	// the previously allocated buffer.
-	b := l.appendPrefixFunc(l.buf[:0], level)
-	b = append(b, buf...)
-	b = append(b, '\n')
-	_, _ = l.writer.Write(b)
-	l.buf = b
+// Err writes a log for an error with the error level.
+// If err is a *ErrLVs, this logs the error with labeled values.
+// If err is not a *ErrLVs, this logs the error with the label "err".
+func (l *LTSVLogger) Err(err error) {
+	errLVs, ok := err.(*ErrLVs)
+	if !ok {
+		errLVs = Err(err)
+	}
+	buf := bufPool.Get().([]byte)
+	buf = l.appendPrefixFunc(buf[:0], "Error")
+	if len(buf) > 0 {
+		buf = append(buf, '\t')
+	}
+	buf = append(buf, errLVs.buf...)
+	buf = append(buf, '\n')
+	_, _ = l.writer.Write(buf)
+	bufPool.Put(buf)
+	errLVsPool.Put(errLVs)
 }
 
 func (l *LTSVLogger) log(level string, lv ...LV) {
 	// Note: To reuse the buffer, create an empty slice pointing to
 	// the previously allocated buffer.
 	buf := l.appendPrefixFunc(l.buf[:0], level)
-	for i, labelAndVal := range lv {
-		if i > 0 {
-			buf = append(buf, '\t')
-		}
+	for _, labelAndVal := range lv {
+		buf = append(buf, '\t')
 		buf = append(buf, labelAndVal.L...)
 		buf = append(buf, ':')
 		buf = l.appendValueFunc(buf, labelAndVal.V)
@@ -272,12 +300,11 @@ func appendPrefixFunc(timeLabel, levelLabel string) AppendPrefixFunc {
 			buf = append(buf, timeLabel...)
 			buf = append(buf, ':')
 			now := time.Now().UTC()
-			buf = appendTime(buf, now)
+			buf = appendUTCTime(buf, now)
 			buf = append(buf, '\t')
 			buf = append(buf, levelLabel...)
 			buf = append(buf, ':')
 			buf = append(buf, level...)
-			buf = append(buf, '\t')
 			return buf
 		}
 	} else if timeLabel != "" && levelLabel == "" {
@@ -285,8 +312,7 @@ func appendPrefixFunc(timeLabel, levelLabel string) AppendPrefixFunc {
 			buf = append(buf, timeLabel...)
 			buf = append(buf, ':')
 			now := time.Now().UTC()
-			buf = appendTime(buf, now)
-			buf = append(buf, '\t')
+			buf = appendUTCTime(buf, now)
 			return buf
 		}
 	} else if timeLabel == "" && levelLabel != "" {
@@ -294,7 +320,6 @@ func appendPrefixFunc(timeLabel, levelLabel string) AppendPrefixFunc {
 			buf = append(buf, levelLabel...)
 			buf = append(buf, ':')
 			buf = append(buf, level...)
-			buf = append(buf, '\t')
 			return buf
 		}
 	} else {
@@ -307,14 +332,15 @@ func appendPrefixFunc(timeLabel, levelLabel string) AppendPrefixFunc {
 func appendPrefix(buf []byte, level string) []byte {
 	buf = append(buf, "time:"...)
 	now := time.Now().UTC()
-	buf = appendTime(buf, now)
+	buf = appendUTCTime(buf, now)
 	buf = append(buf, "\tlevel:"...)
 	buf = append(buf, level...)
 	buf = append(buf, '\t')
 	return buf
 }
 
-func appendTime(buf []byte, t time.Time) []byte {
+func appendUTCTime(buf []byte, t time.Time) []byte {
+	t = t.UTC()
 	tmp := []byte("0000-00-00T00:00:00.000000Z")
 	year, month, day := t.Date()
 	hour, min, sec := t.Clock()
@@ -426,11 +452,23 @@ func (*Discard) DebugEnabled() bool { return false }
 // Debug prints nothing.
 // Note there still exists the cost of evaluating argument values, even though they are not used.
 // Guarding with if and DebugEnabled is recommended.
-func (*Discard) Debug(lv ...LV) {}
+func (*Discard) Debug(lv ...LV) *LVs {
+	lvs := lvsPool.Get().(*LVs)
+	lvs.logger = nil
+	lvs.enabled = false
+	lvs.buf = lvs.buf[:0]
+	return lvs
+}
 
 // Info prints nothing.
 // Note there still exists the cost of evaluating argument values, even though they are not used.
-func (*Discard) Info(lv ...LV) {}
+func (*Discard) Info(lv ...LV) *LVs {
+	lvs := lvsPool.Get().(*LVs)
+	lvs.logger = nil
+	lvs.enabled = false
+	lvs.buf = lvs.buf[:0]
+	return lvs
+}
 
 // Error prints nothing.
 // Note there still exists the cost of evaluating argument values, even though they are not used.

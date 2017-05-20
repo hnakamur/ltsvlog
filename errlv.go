@@ -2,89 +2,142 @@ package ltsvlog
 
 import (
 	"bytes"
+	"fmt"
 	"runtime"
+	"strconv"
 	"sync"
 	"time"
 )
 
-var errLVPool = &sync.Pool{
+var errLVsPool = &sync.Pool{
 	New: func() interface{} {
-		return &ErrLV{
+		return &ErrLVs{
 			buf: make([]byte, 8192),
 		}
 	},
 }
 
-// ErrLV is an error with label and value pairs.
+// ErrLVs is an error with label and value pairs.
 //
 // This is useful when you would like to log an error with
 // additional labeled values later at the higher level of
 // the callstack.
 //
-// ErrLV frees lower level functions from depending on loggers
-// since ErrLV is just a data structure which holds
+// ErrLVs frees lower level functions from depending on loggers
+// since ErrLVs is just a data structure which holds
 // an error, a stacktrace and labeld values.
 //
 // Please see the example at LTSVLogger.Err for an example usage.
-type ErrLV struct {
+type ErrLVs struct {
 	error
 	buf []byte
 }
 
-// Err creates an ErrLV with the specified error.
-func Err(err error) *ErrLV {
-	e := errLVPool.Get().(*ErrLV)
+// Err creates an ErrLVs with the specified error.
+func Err(err error) *ErrLVs {
+	e := errLVsPool.Get().(*ErrLVs)
 	e.error = err
 	e.buf = e.buf[:0]
 	e.buf = append(e.buf, "err:"...)
-	e.buf = appendValue(e.buf, err)
+	e.buf = append(e.buf, escape(fmt.Sprintf("%+v", err))...)
 	return e
 }
 
-// Stack appends a stacktrace with label "stack" to ErrLV.
-func (e *ErrLV) Stack() *ErrLV {
-	e.buf = append(e.buf, "\tstack:"...)
+// Stack appends a stacktrace with label "stack" to ErrLVs.
+func (e *ErrLVs) Stack(label string) *ErrLVs {
+	e.buf = append(e.buf, '\t')
+	e.buf = append(e.buf, label...)
+	e.buf = append(e.buf, ':')
 	e.buf = appendStack(e.buf, 2)
 	return e
 }
 
-// Time appends a current time with label "errtime" to ErrLV.
-// This is useful when you log some time later after an error occurs.
-func (e *ErrLV) Time() *ErrLV {
-	e.buf = append(e.buf, "\terrtime:"...)
-	e.buf = appendTime(e.buf, time.Now())
+func (e *ErrLVs) String(label string, value string) *ErrLVs {
+	e.buf = append(e.buf, '\t')
+	e.buf = append(e.buf, label...)
+	e.buf = append(e.buf, ':')
+	e.buf = append(e.buf, escape(value)...)
 	return e
 }
 
-// LV appends a label value pair to ErrLV.
-func (e *ErrLV) LV(key string, value interface{}) *ErrLV {
+func (e *ErrLVs) Hex(label string, value []byte) *ErrLVs {
 	e.buf = append(e.buf, '\t')
-	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, label...)
 	e.buf = append(e.buf, ':')
-	e.buf = appendValue(e.buf, value)
+	e.buf = appendHexBytes(e.buf, value)
+	return e
+}
+
+func (e *ErrLVs) Sprintf(label, format string, a ...interface{}) *ErrLVs {
+	e.buf = append(e.buf, '\t')
+	e.buf = append(e.buf, label...)
+	e.buf = append(e.buf, ':')
+	e.buf = append(e.buf, escape(fmt.Sprintf(format, a...))...)
+	return e
+}
+
+func (e *ErrLVs) Bool(label string, value bool) *ErrLVs {
+	e.buf = append(e.buf, '\t')
+	e.buf = append(e.buf, label...)
+	e.buf = append(e.buf, ':')
+	e.buf = strconv.AppendBool(e.buf, value)
+	return e
+}
+
+func (e *ErrLVs) Int64(label string, value int64) *ErrLVs {
+	e.buf = append(e.buf, '\t')
+	e.buf = append(e.buf, label...)
+	e.buf = append(e.buf, ':')
+	e.buf = strconv.AppendInt(e.buf, value, 10)
+	return e
+}
+
+func (e *ErrLVs) Uint64(label string, value uint64) *ErrLVs {
+	e.buf = append(e.buf, '\t')
+	e.buf = append(e.buf, label...)
+	e.buf = append(e.buf, ':')
+	e.buf = strconv.AppendUint(e.buf, value, 10)
+	return e
+}
+
+func (e *ErrLVs) Float32(label string, value float32) *ErrLVs {
+	e.buf = append(e.buf, '\t')
+	e.buf = append(e.buf, label...)
+	e.buf = append(e.buf, ':')
+	e.buf = append(e.buf, strconv.FormatFloat(float64(value), 'g', -1, 32)...)
+	return e
+}
+
+func (e *ErrLVs) Float64(label string, value float64) *ErrLVs {
+	e.buf = append(e.buf, '\t')
+	e.buf = append(e.buf, label...)
+	e.buf = append(e.buf, ':')
+	e.buf = append(e.buf, strconv.FormatFloat(value, 'g', -1, 64)...)
+	return e
+}
+
+func (e *ErrLVs) UTCTime(label string, value time.Time) *ErrLVs {
+	e.buf = append(e.buf, '\t')
+	e.buf = append(e.buf, label...)
+	e.buf = append(e.buf, ':')
+	e.buf = appendUTCTime(e.buf, value)
 	return e
 }
 
 // LV returns the original error string without label and values appended.
-func (e *ErrLV) Error() string {
+func (e *ErrLVs) Error() string {
 	return string(e.buf)
 }
 
 // GetError returns the original error.
-func (e *ErrLV) GetError() error {
+func (e *ErrLVs) GetError() error {
 	return e.error
-}
-
-var stackBufPool = &sync.Pool{
-	New: func() interface{} {
-		return make([]byte, 8192)
-	},
 }
 
 // appendStack appends a formated stack trace of the calling goroutine to buf
 // in one line format which suitable for LTSV logs.
 func appendStack(buf []byte, skip int) []byte {
-	src := stackBufPool.Get().([]byte)
+	src := bufPool.Get().([]byte)
 	var n int
 	for {
 		n = runtime.Stack(src, false)
@@ -114,6 +167,6 @@ func appendStack(buf []byte, skip int) []byte {
 			buf = append(buf, ',')
 		}
 	}
-	stackBufPool.Put(src)
+	bufPool.Put(src)
 	return buf
 }

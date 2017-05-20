@@ -3,6 +3,7 @@ package ltsvlog_test
 import (
 	"errors"
 	"os"
+	"time"
 
 	"github.com/hnakamur/ltsvlog"
 )
@@ -44,7 +45,7 @@ func ExampleLTSVLogger_Info() {
 
 func ExampleLTSVLogger_Err() {
 	b := func() error {
-		return ltsvlog.Err(errors.New("some error")).Time().LV("key1", "value1").Stack()
+		return ltsvlog.Err(errors.New("some error")).UTCTime("errtime", time.Now()).String("key1", "value1").Stack("stack")
 	}
 	a := func() error {
 		return b()

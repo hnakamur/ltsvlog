@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/hnakamur/ltsvlog"
 )
@@ -18,11 +19,24 @@ func BenchmarkInfo(b *testing.B) {
 
 	logger := ltsvlog.NewLTSVLogger(tmpfile, false)
 	for i := 0; i < b.N; i++ {
-		logger.LV("msg", "hello").LV("key1", "value1").Info()
+		logger.Info().String("msg", "hello").String("key1", "value1").Log()
 	}
 }
 
-func BenchmarkErrWithStackAndTime(b *testing.B) {
+func BenchmarkInfoString(b *testing.B) {
+	tmpfile, err := ioutil.TempFile("", "benchmark")
+	if err != nil {
+		b.Fatal(err)
+	}
+	defer os.Remove(tmpfile.Name())
+
+	logger := ltsvlog.NewLTSVLogger(tmpfile, false)
+	for i := 0; i < b.N; i++ {
+		logger.Info().String("msg", "hello").String("key1", "value1").Log()
+	}
+}
+
+func BenchmarkErrWithStackAndUTCTime(b *testing.B) {
 	tmpfile, err := ioutil.TempFile("", "benchmark")
 	if err != nil {
 		b.Fatal(err)
@@ -30,7 +44,7 @@ func BenchmarkErrWithStackAndTime(b *testing.B) {
 	defer os.Remove(tmpfile.Name())
 
 	run := func() error {
-		return ltsvlog.Err(errors.New("some error")).Stack().Time().LV("key1", "value1")
+		return ltsvlog.Err(errors.New("some error")).Stack("stack").UTCTime("errtime", time.Now()).String("key1", "value1")
 	}
 
 	logger := ltsvlog.NewLTSVLogger(tmpfile, false)
@@ -48,7 +62,7 @@ func BenchmarkErrWithStack(b *testing.B) {
 	defer os.Remove(tmpfile.Name())
 
 	run := func() error {
-		return ltsvlog.Err(errors.New("some error")).Stack().LV("key1", "value1")
+		return ltsvlog.Err(errors.New("some error")).Stack("stack").String("key1", "value1")
 	}
 
 	logger := ltsvlog.NewLTSVLogger(tmpfile, false)
@@ -58,7 +72,7 @@ func BenchmarkErrWithStack(b *testing.B) {
 	}
 }
 
-func BenchmarkErrWithTime(b *testing.B) {
+func BenchmarkErrWithUTCTime(b *testing.B) {
 	tmpfile, err := ioutil.TempFile("", "benchmark")
 	if err != nil {
 		b.Fatal(err)
@@ -66,7 +80,7 @@ func BenchmarkErrWithTime(b *testing.B) {
 	defer os.Remove(tmpfile.Name())
 
 	run := func() error {
-		return ltsvlog.Err(errors.New("some error")).Time().LV("key1", "value1")
+		return ltsvlog.Err(errors.New("some error")).UTCTime("errtime", time.Now()).String("key1", "value1")
 	}
 
 	logger := ltsvlog.NewLTSVLogger(tmpfile, false)
