@@ -379,7 +379,7 @@ func appendValue(buf []byte, v interface{}) []byte {
 	case uint32:
 		buf = strconv.AppendUint(buf, uint64(v.(uint32)), 10)
 	case uint64:
-		buf = strconv.AppendUint(buf, uint64(v.(uint64)), 10)
+		buf = strconv.AppendUint(buf, v.(uint64), 10)
 	case float32:
 		buf = append(buf, []byte(strconv.FormatFloat(float64(v.(float32)), 'g', -1, 32))...)
 	case float64:
