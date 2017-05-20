@@ -74,10 +74,16 @@ func (e *ErrLV) toLVs() []LV {
 	return e.lvs
 }
 
+var stackBufPool = &sync.Pool{
+	New: func() interface{} {
+		return make([]byte, 8192)
+	},
+}
+
 // fullstack formats a stack trace of the calling goroutine into buf
 // in one line format which suitable for LTSV logs.
 func fullstack(skip int) string {
-	buf := make([]byte, 8192)
+	buf := stackBufPool.Get().([]byte)
 	var n int
 	for {
 		n = runtime.Stack(buf, false)
@@ -86,6 +92,7 @@ func fullstack(skip int) string {
 		}
 		buf = make([]byte, len(buf)*2)
 	}
+	bufToPut := buf
 	buf = buf[:n]
 
 	// NOTE: We reuse the same buffer here.
@@ -110,5 +117,7 @@ func fullstack(skip int) string {
 			p = append(p, ',')
 		}
 	}
-	return string(p)
+	s := string(p)
+	stackBufPool.Put(bufToPut)
+	return s
 }
