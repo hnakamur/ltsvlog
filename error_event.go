@@ -183,7 +183,22 @@ func (e *ErrorEvent) Float64(label string, value float64) *ErrorEvent {
 	return e
 }
 
+// Time appends a labeled formatted time value to ErrorEvent.
+// The format is the same as that in the Go standard time package.
+// If the format is empty, time.RFC3339 is used.
+func (e *ErrorEvent) Time(label string, value time.Time, format string) *ErrorEvent {
+	e.buf = append(e.buf, '\t')
+	e.buf = append(e.buf, label...)
+	e.buf = append(e.buf, ':')
+	if format == "" {
+		format = time.RFC3339
+	}
+	e.buf = append(e.buf, escape(value.Format(format))...)
+	return e
+}
+
 // UTCTime appends a labeled UTC time value to ErrorEvent.
+// The format is the same as the log time field value.
 func (e *ErrorEvent) UTCTime(label string, value time.Time) *ErrorEvent {
 	e.buf = append(e.buf, '\t')
 	e.buf = append(e.buf, label...)
