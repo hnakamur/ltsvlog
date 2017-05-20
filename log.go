@@ -192,14 +192,6 @@ func (l *LTSVLogger) Info(lv ...LV) {
 	l.mu.Unlock()
 }
 
-// Log writes a log.
-func (l *LTSVLogger) Log(lvs *LVs) {
-	l.mu.Lock()
-	l.log(lvs.level, lvs.lvs...)
-	l.mu.Unlock()
-	lvsPool.Put(lvs)
-}
-
 // Deprecated. Use Err instead.
 //
 // Error writes a log with the error level.
