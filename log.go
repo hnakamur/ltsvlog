@@ -173,7 +173,7 @@ func NewLTSVLoggerCustomFormat(w io.Writer, debugEnabled bool, stackBufSize int,
 // You can avoid the cost of evaluation of arguments passed to Debug like:
 //
 //   if ltsvlog.Logger.DebugEnabled() {
-//       ltsvlog.Logger.Debug(ltsvlog.LV{"label1", someSlowFunction()})
+//       ltsvlog.Logger.Debug().String("label1", someSlowFunction()).Log()
 //   }
 func (l *LTSVLogger) DebugEnabled() bool {
 	return l.debugEnabled
