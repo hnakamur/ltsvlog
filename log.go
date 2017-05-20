@@ -39,8 +39,8 @@ type LV struct {
 // LogWriter is a LTSV logger interface
 type LogWriter interface {
 	DebugEnabled() bool
-	Debug(lv ...LV) *LVs
-	Info(lv ...LV) *LVs
+	Debug(lv ...LV) *Event
+	Info(lv ...LV) *Event
 	Err(err error)
 
 	Error(lv ...LV)
@@ -179,7 +179,7 @@ func (l *LTSVLogger) DebugEnabled() bool {
 	return l.debugEnabled
 }
 
-// Debug is used to get a LVs for writing a Debug level log.
+// Debug returns a new Event for writing a Debug level log.
 //
 // Note there still exists the cost of evaluating argument values if the debug level is disabled, even though those arguments are not used.
 // So guarding with if and DebugEnabled is recommended.
@@ -187,10 +187,10 @@ func (l *LTSVLogger) DebugEnabled() bool {
 // Passing one more lv is deprecated. This is left for backward
 // compatiblity for a while and it will not be supported in future version.
 // This means the signature of thie method will be changed to
-// func (l *LTSVLogger) Debug() *LVs
-func (l *LTSVLogger) Debug(lv ...LV) *LVs {
+// func (l *LTSVLogger) Debug() *Event
+func (l *LTSVLogger) Debug(lv ...LV) *Event {
 	if len(lv) == 0 {
-		lvs := lvsPool.Get().(*LVs)
+		lvs := eventPool.Get().(*Event)
 		lvs.logger = l
 		lvs.enabled = l.debugEnabled
 		lvs.buf = lvs.buf[:0]
@@ -211,15 +211,15 @@ func (l *LTSVLogger) Debug(lv ...LV) *LVs {
 	}
 }
 
-// Info is used to get a LVs for writing a Info level log.
+// Info returns a new Event for writing a Info level log.
 //
 // Passing one more lv is deprecated. This is left for backward
 // compatiblity for a while and it will not be supported in future version.
 // This means the signature of thie method will be changed to
-// func (l *LTSVLogger) Info() *LVs
-func (l *LTSVLogger) Info(lv ...LV) *LVs {
+// func (l *LTSVLogger) Info() *Event
+func (l *LTSVLogger) Info(lv ...LV) *Event {
 	if len(lv) == 0 {
-		lvs := lvsPool.Get().(*LVs)
+		lvs := eventPool.Get().(*Event)
 		lvs.logger = l
 		lvs.enabled = true
 		lvs.buf = lvs.buf[:0]
@@ -445,8 +445,8 @@ func (*Discard) DebugEnabled() bool { return false }
 // Debug prints nothing.
 // Note there still exists the cost of evaluating argument values, even though they are not used.
 // Guarding with if and DebugEnabled is recommended.
-func (*Discard) Debug(lv ...LV) *LVs {
-	lvs := lvsPool.Get().(*LVs)
+func (*Discard) Debug(lv ...LV) *Event {
+	lvs := eventPool.Get().(*Event)
 	lvs.logger = nil
 	lvs.enabled = false
 	lvs.buf = lvs.buf[:0]
@@ -455,8 +455,8 @@ func (*Discard) Debug(lv ...LV) *LVs {
 
 // Info prints nothing.
 // Note there still exists the cost of evaluating argument values, even though they are not used.
-func (*Discard) Info(lv ...LV) *LVs {
-	lvs := lvsPool.Get().(*LVs)
+func (*Discard) Info(lv ...LV) *Event {
+	lvs := eventPool.Get().(*Event)
 	lvs.logger = nil
 	lvs.enabled = false
 	lvs.buf = lvs.buf[:0]
