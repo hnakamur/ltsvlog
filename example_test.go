@@ -33,7 +33,7 @@ func ExampleLTSVLogger_Debug() {
 
 func ExampleLTSVLogger_Info() {
 	ltsvlog.Logger.Info().String("msg", "goodbye, world").String("foo", "bar").
-		Sprintf("nilValue", "%v", nil).Hex("bytes", []byte("a/b")).Log()
+		Sprintf("nilValue", "%v", nil).Bytes("bytes", []byte("a/b")).Log()
 
 	// Output example:
 	// time:2017-05-20T19:16:11.798840Z	level:Info	msg:goodbye, world	foo:bar	nilValue:<nil>	bytes:0x612f62
