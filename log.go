@@ -28,6 +28,8 @@ import (
 	"time"
 )
 
+// Deprecated.
+//
 // LV represents a label L and a value V.
 type LV struct {
 	L string
@@ -37,8 +39,8 @@ type LV struct {
 // LogWriter is a LTSV logger interface
 type LogWriter interface {
 	DebugEnabled() bool
-	Debug(lv ...LV)
-	Info(lv ...LV)
+	Debug(lv ...LV) *Event
+	Info(lv ...LV) *Event
 	Err(err error)
 
 	Error(lv ...LV)
@@ -87,6 +89,8 @@ func SetLevelLabel(label string) Option {
 	}
 }
 
+// Deprecated.
+//
 // SetAppendValue returns the option function to set the function
 // to append a value.
 func SetAppendValue(f AppendValueFunc) Option {
@@ -101,6 +105,8 @@ func SetAppendValue(f AppendValueFunc) Option {
 // for a log record to a byte buffer and returns the result buffer.
 type AppendPrefixFunc func(buf []byte, level string) []byte
 
+// Deprecated.
+//
 // AppendValueFunc is a function type for appending a value to
 // a byte buffer and returns the result buffer.
 type AppendValueFunc func(buf []byte, v interface{}) []byte
@@ -130,6 +136,7 @@ func NewLTSVLogger(w io.Writer, debugEnabled bool, options ...Option) *LTSVLogge
 		levelLabel:       defaultLevelLabel,
 		appendPrefixFunc: defaultAppendPrefixFunc,
 		appendValueFunc:  appendValue,
+		buf:              make([]byte, 1024),
 		stackBuf:         make([]byte, 8192),
 	}
 	for _, o := range options {
@@ -166,29 +173,64 @@ func NewLTSVLoggerCustomFormat(w io.Writer, debugEnabled bool, stackBufSize int,
 // You can avoid the cost of evaluation of arguments passed to Debug like:
 //
 //   if ltsvlog.Logger.DebugEnabled() {
-//       ltsvlog.Logger.Debug(ltsvlog.LV{"label1", someSlowFunction()})
+//       ltsvlog.Logger.Debug().String("label1", someSlowFunction()).Log()
 //   }
 func (l *LTSVLogger) DebugEnabled() bool {
 	return l.debugEnabled
 }
 
-// Debug writes a log with the debug level if the debug level is enabled.
+// Debug returns a new Event for writing a Debug level log.
 //
 // Note there still exists the cost of evaluating argument values if the debug level is disabled, even though those arguments are not used.
 // So guarding with if and DebugEnabled is recommended.
-func (l *LTSVLogger) Debug(lv ...LV) {
-	if l.debugEnabled {
-		l.mu.Lock()
-		l.log("Debug", lv...)
-		l.mu.Unlock()
+//
+// Passing one more lv is deprecated. This is left for backward
+// compatiblity for a while and it will not be supported in future version.
+// This means the signature of thie method will be changed to
+// func (l *LTSVLogger) Debug() *Event
+func (l *LTSVLogger) Debug(lv ...LV) *Event {
+	if len(lv) == 0 {
+		ev := eventPool.Get().(*Event)
+		ev.logger = l
+		ev.enabled = l.debugEnabled
+		ev.buf = ev.buf[:0]
+		if ev.enabled {
+			ev.buf = l.appendPrefixFunc(ev.buf, "Debug")
+		}
+		return ev
+	} else {
+		// NOTE: This code is left for backward compatibility.
+		// TODO: Remove this code in a later version.
+
+		if l.debugEnabled {
+			l.mu.Lock()
+			l.log("Debug", lv...)
+			l.mu.Unlock()
+		}
+		return nil
 	}
 }
 
-// Info writes a log with the info level.
-func (l *LTSVLogger) Info(lv ...LV) {
-	l.mu.Lock()
-	l.log("Info", lv...)
-	l.mu.Unlock()
+// Info returns a new Event for writing a Info level log.
+//
+// Passing one more lv is deprecated. This is left for backward
+// compatiblity for a while and it will not be supported in future version.
+// This means the signature of thie method will be changed to
+// func (l *LTSVLogger) Info() *Event
+func (l *LTSVLogger) Info(lv ...LV) *Event {
+	if len(lv) == 0 {
+		ev := eventPool.Get().(*Event)
+		ev.logger = l
+		ev.enabled = true
+		ev.buf = ev.buf[:0]
+		ev.buf = l.appendPrefixFunc(ev.buf, "Info")
+		return ev
+	} else {
+		l.mu.Lock()
+		l.log("Info", lv...)
+		l.mu.Unlock()
+		return nil
+	}
 }
 
 // Deprecated. Use Err instead.
@@ -212,65 +254,64 @@ func (l *LTSVLogger) ErrorWithStack(lv ...LV) {
 }
 
 // Err writes a log for an error with the error level.
-// If err is a *ErrLV, this logs the error with labeled values.
-// If err is not a *ErrLV, this logs the error with the label "err".
+// If err is a *ErrorEvent, this logs the error with labeled values.
+// If err is not a *ErrorEvent, this logs the error with the label "err".
 func (l *LTSVLogger) Err(err error) {
-	var lv []LV
-	errLV, ok := err.(*ErrLV)
-	if ok {
-		lv = errLV.toLVs()
-	} else {
-		lv = []LV{{"err", err}}
+	errorEvent, ok := err.(*ErrorEvent)
+	if !ok {
+		errorEvent = Err(err)
 	}
-	l.mu.Lock()
-	l.log("Error", lv...)
-	l.mu.Unlock()
+	buf := make([]byte, 8192)
+	buf = l.appendPrefixFunc(buf[:0], "Error")
+	buf = append(buf, errorEvent.buf...)
+	buf = append(buf, '\n')
+	_, _ = l.writer.Write(buf)
+	errorEventPool.Put(errorEvent)
 }
 
 func (l *LTSVLogger) log(level string, lv ...LV) {
 	// Note: To reuse the buffer, create an empty slice pointing to
 	// the previously allocated buffer.
 	buf := l.appendPrefixFunc(l.buf[:0], level)
-	for i, labelAndVal := range lv {
-		if i > 0 {
-			buf = append(buf, '\t')
-		}
-		buf = append(buf, []byte(labelAndVal.L)...)
+	for _, labelAndVal := range lv {
+		buf = append(buf, labelAndVal.L...)
 		buf = append(buf, ':')
 		buf = l.appendValueFunc(buf, labelAndVal.V)
+		buf = append(buf, '\t')
 	}
-	buf = append(buf, '\n')
+	buf[len(buf)-1] = '\n'
 	_, _ = l.writer.Write(buf)
 	l.buf = buf
 }
 
 func appendPrefixFunc(timeLabel, levelLabel string) AppendPrefixFunc {
 	if timeLabel != "" && levelLabel != "" {
-		timeLabelBytes := []byte(timeLabel + ":")
-		levelLabelBytes := []byte("\t" + levelLabel + ":")
 		return func(buf []byte, level string) []byte {
-			buf = append(buf, timeLabelBytes...)
+			buf = append(buf, timeLabel...)
+			buf = append(buf, ':')
 			now := time.Now().UTC()
-			buf = appendTime(buf, now)
-			buf = append(buf, levelLabelBytes...)
-			buf = append(buf, []byte(level)...)
+			buf = appendUTCTime(buf, now)
+			buf = append(buf, '\t')
+			buf = append(buf, levelLabel...)
+			buf = append(buf, ':')
+			buf = append(buf, level...)
 			buf = append(buf, '\t')
 			return buf
 		}
 	} else if timeLabel != "" && levelLabel == "" {
-		timeLabelBytes := []byte(timeLabel + ":")
 		return func(buf []byte, level string) []byte {
-			buf = append(buf, timeLabelBytes...)
+			buf = append(buf, timeLabel...)
+			buf = append(buf, ':')
 			now := time.Now().UTC()
-			buf = appendTime(buf, now)
+			buf = appendUTCTime(buf, now)
 			buf = append(buf, '\t')
 			return buf
 		}
 	} else if timeLabel == "" && levelLabel != "" {
-		levelLabelBytes := []byte(levelLabel + ":")
 		return func(buf []byte, level string) []byte {
-			buf = append(buf, levelLabelBytes...)
-			buf = append(buf, []byte(level)...)
+			buf = append(buf, levelLabel...)
+			buf = append(buf, ':')
+			buf = append(buf, level...)
 			buf = append(buf, '\t')
 			return buf
 		}
@@ -284,14 +325,15 @@ func appendPrefixFunc(timeLabel, levelLabel string) AppendPrefixFunc {
 func appendPrefix(buf []byte, level string) []byte {
 	buf = append(buf, "time:"...)
 	now := time.Now().UTC()
-	buf = appendTime(buf, now)
+	buf = appendUTCTime(buf, now)
 	buf = append(buf, "\tlevel:"...)
-	buf = append(buf, []byte(level)...)
+	buf = append(buf, level...)
 	buf = append(buf, '\t')
 	return buf
 }
 
-func appendTime(buf []byte, t time.Time) []byte {
+func appendUTCTime(buf []byte, t time.Time) []byte {
+	t = t.UTC()
 	tmp := []byte("0000-00-00T00:00:00.000000Z")
 	year, month, day := t.Date()
 	hour, min, sec := t.Clock()
@@ -303,20 +345,6 @@ func appendTime(buf []byte, t time.Time) []byte {
 	itoa(tmp[17:19], sec, 2)
 	itoa(tmp[20:26], t.Nanosecond()/1e3, 6)
 	return append(buf, tmp...)
-}
-
-func formatTime(t time.Time) string {
-	buf := []byte("0000-00-00T00:00:00.000000Z")
-	year, month, day := t.Date()
-	hour, min, sec := t.Clock()
-	itoa(buf[:4], year, 4)
-	itoa(buf[5:7], int(month), 2)
-	itoa(buf[8:10], day, 2)
-	itoa(buf[11:13], hour, 2)
-	itoa(buf[14:16], min, 2)
-	itoa(buf[17:19], sec, 2)
-	itoa(buf[20:26], t.Nanosecond()/1e3, 6)
-	return string(buf)
 }
 
 // Cheap integer to fixed-width decimal ASCII.  Give a negative width to avoid zero-padding.
@@ -350,7 +378,7 @@ func appendValue(buf []byte, v interface{}) []byte {
 	case nil:
 		buf = append(buf, "<nil>"...)
 	case string:
-		buf = append(buf, []byte(escape(v.(string)))...)
+		buf = append(buf, escape(v.(string))...)
 	case int:
 		buf = strconv.AppendInt(buf, int64(v.(int)), 10)
 	case uint:
@@ -370,11 +398,11 @@ func appendValue(buf []byte, v interface{}) []byte {
 	case uint32:
 		buf = strconv.AppendUint(buf, uint64(v.(uint32)), 10)
 	case uint64:
-		buf = strconv.AppendUint(buf, uint64(v.(uint64)), 10)
+		buf = strconv.AppendUint(buf, v.(uint64), 10)
 	case float32:
-		buf = append(buf, []byte(strconv.FormatFloat(float64(v.(float32)), 'g', -1, 32))...)
+		buf = append(buf, strconv.FormatFloat(float64(v.(float32)), 'g', -1, 32)...)
 	case float64:
-		buf = append(buf, []byte(strconv.FormatFloat(v.(float64), 'g', -1, 64))...)
+		buf = append(buf, strconv.FormatFloat(v.(float64), 'g', -1, 64)...)
 	case bool:
 		buf = strconv.AppendBool(buf, v.(bool))
 	case uintptr:
@@ -382,9 +410,9 @@ func appendValue(buf []byte, v interface{}) []byte {
 	case []byte:
 		buf = appendHexBytes(buf, v.([]byte))
 	case fmt.Stringer:
-		buf = append(buf, []byte(escape(v.(fmt.Stringer).String()))...)
+		buf = append(buf, escape(v.(fmt.Stringer).String())...)
 	default:
-		buf = append(buf, []byte(escape(fmt.Sprintf("%+v", v)))...)
+		buf = append(buf, escape(fmt.Sprintf("%+v", v))...)
 	}
 	return buf
 }
@@ -397,6 +425,13 @@ func appendHexBytes(buf []byte, v []byte) []byte {
 		buf = append(buf, digits[b/16])
 		buf = append(buf, digits[b%16])
 	}
+	return buf
+}
+
+func appendHexByte(buf []byte, b byte) []byte {
+	buf = append(buf, "0x"...)
+	buf = append(buf, digits[b/16])
+	buf = append(buf, digits[b%16])
 	return buf
 }
 
@@ -417,11 +452,23 @@ func (*Discard) DebugEnabled() bool { return false }
 // Debug prints nothing.
 // Note there still exists the cost of evaluating argument values, even though they are not used.
 // Guarding with if and DebugEnabled is recommended.
-func (*Discard) Debug(lv ...LV) {}
+func (*Discard) Debug(lv ...LV) *Event {
+	ev := eventPool.Get().(*Event)
+	ev.logger = nil
+	ev.enabled = false
+	ev.buf = ev.buf[:0]
+	return ev
+}
 
 // Info prints nothing.
 // Note there still exists the cost of evaluating argument values, even though they are not used.
-func (*Discard) Info(lv ...LV) {}
+func (*Discard) Info(lv ...LV) *Event {
+	ev := eventPool.Get().(*Event)
+	ev.logger = nil
+	ev.enabled = false
+	ev.buf = ev.buf[:0]
+	return ev
+}
 
 // Error prints nothing.
 // Note there still exists the cost of evaluating argument values, even though they are not used.

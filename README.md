@@ -21,19 +21,16 @@ import (
 
 func main() {
 	if ltsvlog.Logger.DebugEnabled() {
-		ltsvlog.Logger.Debug(ltsvlog.LV{"msg", "This is a debug message"},
-			ltsvlog.LV{"key", "key1"}, ltsvlog.LV{"intValue", 234})
+		ltsvlog.Logger.Debug().String("msg", "This is a debug message").
+			String("str", "foo").Int("int", 234).Log()
 	}
-	ltsvlog.Logger.Info(ltsvlog.LV{"msg", "hello, world"}, ltsvlog.LV{"key", "key1"},
-		ltsvlog.LV{"value", "value1"})
+
+	ltsvlog.Logger.Info().Sprintf("float1", "%3.2f", 3.14).Log()
 
 	err := a()
 	if err != nil {
 		ltsvlog.Logger.Err(err)
 	}
-
-	ltsvlog.Logger.Info(ltsvlog.LV{"msg", "goodbye, world"}, ltsvlog.LV{"foo", "bar"},
-		ltsvlog.LV{"nilValue", nil}, ltsvlog.LV{"bytes", []byte("a/b")})
 }
 
 func a() error {
@@ -41,17 +38,16 @@ func a() error {
 }
 
 func b() error {
-	return ltsvlog.Err(errors.New("some error")).Time().LV("key1", "value1").Stack()
+	return ltsvlog.Err(errors.New("some error")).String("key1", "value1").Stack("")
 }
 ```
 
 An example output:
 
 ```
-time:2017-05-19T21:01:17.660840Z	level:Debug	msg:This is a debug message	key:key1	intValue:234
-time:2017-05-19T21:01:17.660871Z	level:Info	msg:hello, world	key:key1	value:value1
-time:2017-05-19T21:01:17.660918Z	level:Error	err:some error	errtime:2017-05-20T06:01:17.660877Z	key1:value1	stack:[main.b(0x3, 0xc42006e0f8) /home/hnakamur/go/src/github.com/hnakamur/ltsvlog/example/main.go:31 +0x26b],[main.a(0xc42006e080, 0xc420041e38) /home/hnakamur/go/src/github.com/hnakamur/ltsvlog/example/main.go:27 +0x22],[main.main() /home/hnakamur/go/src/github.com/hnakamur/ltsvlog/example/main.go:17 +0x1fb]
-time:2017-05-19T21:01:17.660942Z	level:Info	msg:goodbye, world	foo:bar	nilValue:<nil>	bytes:0x612f62
+time:2017-05-21T05:19:11.256860Z	level:Debug	msg:This is a debug message	str:foo	int:234
+time:2017-05-21T05:19:11.256887Z	level:Info	float1:3.14
+time:2017-05-21T05:19:11.256926Z	level:Error	err:some error	key1:value1	stack:[main.b(0x0, 0x0) /home/hnakamur/go/src/github.com/hnakamur/ltsvlog/example/main.go:28 +0xc8],[main.a(0xc42001a240, 0x4c5d6e) /home/hnakamur/go/src/github.com/hnakamur/ltsvlog/example/main.go:24 +0x22],[main.main() /home/hnakamur/go/src/github.com/hnakamur/ltsvlog/example/main.go:17 +0x11e]
 ```
 
 Since these log lines ar long, please scroll horizontally to the right to see all the output.
