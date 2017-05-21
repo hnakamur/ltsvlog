@@ -23,19 +23,6 @@ func BenchmarkInfo(b *testing.B) {
 	}
 }
 
-func BenchmarkInfoString(b *testing.B) {
-	tmpfile, err := ioutil.TempFile("", "benchmark")
-	if err != nil {
-		b.Fatal(err)
-	}
-	defer os.Remove(tmpfile.Name())
-
-	logger := ltsvlog.NewLTSVLogger(tmpfile, false)
-	for i := 0; i < b.N; i++ {
-		logger.Info().String("msg", "hello").String("key1", "value1").Log()
-	}
-}
-
 func BenchmarkErrWithStackAndUTCTime(b *testing.B) {
 	tmpfile, err := ioutil.TempFile("", "benchmark")
 	if err != nil {
