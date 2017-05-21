@@ -190,14 +190,14 @@ func (l *LTSVLogger) DebugEnabled() bool {
 // func (l *LTSVLogger) Debug() *Event
 func (l *LTSVLogger) Debug(lv ...LV) *Event {
 	if len(lv) == 0 {
-		lvs := eventPool.Get().(*Event)
-		lvs.logger = l
-		lvs.enabled = l.debugEnabled
-		lvs.buf = lvs.buf[:0]
-		if lvs.enabled {
-			lvs.buf = l.appendPrefixFunc(lvs.buf, "Debug")
+		ev := eventPool.Get().(*Event)
+		ev.logger = l
+		ev.enabled = l.debugEnabled
+		ev.buf = ev.buf[:0]
+		if ev.enabled {
+			ev.buf = l.appendPrefixFunc(ev.buf, "Debug")
 		}
-		return lvs
+		return ev
 	} else {
 		// NOTE: This code is left for backward compatibility.
 		// TODO: Remove this code in a later version.
@@ -219,12 +219,12 @@ func (l *LTSVLogger) Debug(lv ...LV) *Event {
 // func (l *LTSVLogger) Info() *Event
 func (l *LTSVLogger) Info(lv ...LV) *Event {
 	if len(lv) == 0 {
-		lvs := eventPool.Get().(*Event)
-		lvs.logger = l
-		lvs.enabled = true
-		lvs.buf = lvs.buf[:0]
-		lvs.buf = l.appendPrefixFunc(lvs.buf, "Info")
-		return lvs
+		ev := eventPool.Get().(*Event)
+		ev.logger = l
+		ev.enabled = true
+		ev.buf = ev.buf[:0]
+		ev.buf = l.appendPrefixFunc(ev.buf, "Info")
+		return ev
 	} else {
 		l.mu.Lock()
 		l.log("Info", lv...)
@@ -453,21 +453,21 @@ func (*Discard) DebugEnabled() bool { return false }
 // Note there still exists the cost of evaluating argument values, even though they are not used.
 // Guarding with if and DebugEnabled is recommended.
 func (*Discard) Debug(lv ...LV) *Event {
-	lvs := eventPool.Get().(*Event)
-	lvs.logger = nil
-	lvs.enabled = false
-	lvs.buf = lvs.buf[:0]
-	return lvs
+	ev := eventPool.Get().(*Event)
+	ev.logger = nil
+	ev.enabled = false
+	ev.buf = ev.buf[:0]
+	return ev
 }
 
 // Info prints nothing.
 // Note there still exists the cost of evaluating argument values, even though they are not used.
 func (*Discard) Info(lv ...LV) *Event {
-	lvs := eventPool.Get().(*Event)
-	lvs.logger = nil
-	lvs.enabled = false
-	lvs.buf = lvs.buf[:0]
-	return lvs
+	ev := eventPool.Get().(*Event)
+	ev.logger = nil
+	ev.enabled = false
+	ev.buf = ev.buf[:0]
+	return ev
 }
 
 // Error prints nothing.
