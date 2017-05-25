@@ -3,6 +3,7 @@ package ltsvlog
 import (
 	"bytes"
 	"math"
+	"math/big"
 	"testing"
 	"time"
 )
@@ -30,6 +31,13 @@ func TestEvent_Log(t *testing.T) {
 				l.Info().String("msg", "hello").Log()
 			},
 			want: "level:Info\tmsg:hello\n",
+		},
+		{
+			name: "stringer",
+			f: func(l *LTSVLogger) {
+				l.Info().Stringer("msg", big.NewInt(123)).Log()
+			},
+			want: "level:Info\tmsg:123\n",
 		},
 		{
 			name: "bool",
