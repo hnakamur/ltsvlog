@@ -35,6 +35,19 @@ func (e *Event) String(label string, value string) *Event {
 	return e
 }
 
+// Stringer appends a labeled string value to Event.
+// The value will be converted to a string with String() method.
+func (e *Event) Stringer(label string, value fmt.Stringer) *Event {
+	if !e.enabled {
+		return e
+	}
+	e.buf = append(e.buf, label...)
+	e.buf = append(e.buf, ':')
+	e.buf = append(e.buf, escape(value.String())...)
+	e.buf = append(e.buf, '\t')
+	return e
+}
+
 // Bytes appends a labeled bytes value to Event.
 func (e *Event) Bytes(label string, value []byte) *Event {
 	if !e.enabled {

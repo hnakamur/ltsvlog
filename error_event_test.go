@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"math"
+	"math/big"
 	"regexp"
 	"testing"
 	"time"
@@ -25,6 +26,13 @@ func TestErrorEvent_Log(t *testing.T) {
 				l.Err(Err(errors.New("some error")).String("str", "foo"))
 			},
 			want: "level:Error\terr:some error\tstr:foo\n",
+		},
+		{
+			name: "stringer",
+			f: func(l *LTSVLogger) {
+				l.Err(Err(errors.New("some error")).Stringer("value", big.NewInt(123)))
+			},
+			want: "level:Error\terr:some error\tvalue:123\n",
 		},
 		{
 			name: "bool",

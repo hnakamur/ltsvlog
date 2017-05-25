@@ -71,6 +71,16 @@ func (e *ErrorEvent) String(label string, value string) *ErrorEvent {
 	return e
 }
 
+// Stringer appends a labeled string value to ErrorEvent.
+// The value will be converted to a string with String() method.
+func (e *ErrorEvent) Stringer(label string, value fmt.Stringer) *ErrorEvent {
+	e.buf = append(e.buf, '\t')
+	e.buf = append(e.buf, label...)
+	e.buf = append(e.buf, ':')
+	e.buf = append(e.buf, escape(value.String())...)
+	return e
+}
+
 // Byte appends a labeled byte value to ErrorEvent.
 func (e *ErrorEvent) Byte(label string, value byte) *ErrorEvent {
 	e.buf = append(e.buf, '\t')
