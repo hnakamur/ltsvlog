@@ -56,7 +56,9 @@ func WrapErr(err error, wrapper func(err error) error) *ErrorEvent {
 		e = Err(err)
 	}
 
-	e.error = wrapper(e.error)
+	if wrapper != nil {
+		e.error = wrapper(e.error)
+	}
 	return e
 }
 
