@@ -53,7 +53,7 @@ func Err(err error) *ErrorEvent {
 func WrapErr(err error, wrapper func(err error) error) *ErrorEvent {
 	e, ok := err.(*ErrorEvent)
 	if !ok {
-		return Err(err)
+		e = Err(err)
 	}
 
 	e.error = wrapper(e.error)
