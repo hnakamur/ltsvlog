@@ -261,10 +261,9 @@ func (l *LTSVLogger) Err(err error) {
 	if !ok {
 		errorEvent = Err(err)
 	}
-	errStr := errorEvent.ErrorWithValues()
-	buf := make([]byte, 0, 64+len(errStr))
+	buf := make([]byte, 0, 8192)
 	buf = l.appendPrefixFunc(buf[:0], "Error")
-	buf = append(buf, errStr...)
+	buf = errorEvent.AppendErrorWithValues(buf)
 	buf = append(buf, '\n')
 	_, _ = l.writer.Write(buf)
 	errorEventPool.Put(errorEvent)

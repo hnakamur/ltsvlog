@@ -234,12 +234,11 @@ func (e *ErrorEvent) Error() string {
 	return e.error.Error()
 }
 
-// ErrorWithValues returns the error string with labeled values.
-func (e *ErrorEvent) ErrorWithValues() string {
-	buf := make([]byte, 0, 8192+len(e.buf))
+// AppendErrorWithValues appends the error string with labeled values to a byte buffer.
+func (e *ErrorEvent) AppendErrorWithValues(buf []byte) []byte {
 	buf = append(buf, "err:"...)
 	buf = append(buf, escape(e.Error())...)
-	return string(append(buf, e.buf...))
+	return append(buf, e.buf...)
 }
 
 // OriginalError returns the original error.
