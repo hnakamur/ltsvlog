@@ -266,7 +266,6 @@ func (l *LTSVLogger) Err(err error) {
 	buf = errorEvent.AppendErrorWithValues(buf)
 	buf = append(buf, '\n')
 	_, _ = l.writer.Write(buf)
-	errorEventPool.Put(errorEvent)
 }
 
 func (l *LTSVLogger) log(level string, lv ...LV) {

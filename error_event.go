@@ -9,14 +9,6 @@ import (
 	"time"
 )
 
-var errorEventPool = &sync.Pool{
-	New: func() interface{} {
-		return &ErrorEvent{
-			buf: make([]byte, 8192),
-		}
-	},
-}
-
 // ErrorEvent is an error with label and value pairs.
 // *ErrroEvent implements the error interface so you can
 // return *ErrorEvent as an error.
@@ -42,11 +34,11 @@ type ErrorEvent struct {
 
 // Err creates an ErrorEvent with the specified error.
 func Err(err error) *ErrorEvent {
-	e := errorEventPool.Get().(*ErrorEvent)
-	e.error = err
-	e.originalErr = err
-	e.buf = e.buf[:0]
-	return e
+	return &ErrorEvent{
+		error:       err,
+		originalErr: err,
+		buf:         make([]byte, 0, 8192),
+	}
 }
 
 // WrapErr wraps an ErrorEvent or a plain error and returns a new error.
