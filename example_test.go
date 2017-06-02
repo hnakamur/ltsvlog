@@ -2,6 +2,7 @@ package ltsvlog_test
 
 import (
 	"errors"
+	"fmt"
 	"os"
 
 	"github.com/hnakamur/ltsvlog"
@@ -48,7 +49,14 @@ func ExampleLTSVLogger_Err() {
 		return ltsvlog.Err(errors.New("some error")).String("key1", "value1").Stack("")
 	}
 	a := func() error {
-		return b()
+		err := b()
+		if err != nil {
+			return ltsvlog.WrapErr(err, func(err error) error {
+				return fmt.Errorf("add explanation here, err=%v", err)
+			})
+		}
+		return nil
+
 	}
 	err := a()
 	if err != nil {
@@ -56,7 +64,7 @@ func ExampleLTSVLogger_Err() {
 	}
 
 	// Output example:
-	// time:2017-05-20T19:29:59.707525Z	level:Error	err:some error	key1:value1	stack:[main.b(0x0, 0x0) /home/hnakamur/go/src/github.com/hnakamur/ltsvlog/example/err/main.go:21 +0xc8],[main.a(0xc420016200, 0xc4200001a0) /home/hnakamur/go/src/github.com/hnakamur/ltsvlog/example/err/main.go:17 +0x22],[main.main() /home/hnakamur/go/src/github.com/hnakamur/ltsvlog/example/err/main.go:10 +0x22]
+	// time:2017-06-01T16:52:33.959914Z	level:Error	err:add explanation here, err=some error	key1:value1	stack:[main.b(0x2000, 0x38) /home/hnakamur/go/src/github.com/hnakamur/ltsvlog/example/main.go:35 +0xc8],[main.a(0xc42001a240, 0x4c6e2e) /home/hnakamur/go/src/github.com/hnakamur/ltsvlog/example/main.go:25 +0x22],[main.main() /home/hnakamur/go/src/github.com/hnakamur/ltsvlog/example/main.go:18 +0x11e]
 	// Output:
 
 	// Actually we don't test the results.

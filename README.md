@@ -15,6 +15,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/hnakamur/ltsvlog"
 )
@@ -34,7 +35,13 @@ func main() {
 }
 
 func a() error {
-	return b()
+	err := b()
+	if err != nil {
+		return ltsvlog.WrapErr(err, func(err error) error {
+			return fmt.Errorf("add explanation here, err=%v", err)
+		})
+	}
+	return nil
 }
 
 func b() error {
@@ -45,9 +52,9 @@ func b() error {
 An example output:
 
 ```
-time:2017-05-21T05:19:11.256860Z	level:Debug	msg:This is a debug message	str:foo	int:234
-time:2017-05-21T05:19:11.256887Z	level:Info	float1:3.14
-time:2017-05-21T05:19:11.256926Z	level:Error	err:some error	key1:value1	stack:[main.b(0x0, 0x0) /home/hnakamur/go/src/github.com/hnakamur/ltsvlog/example/main.go:28 +0xc8],[main.a(0xc42001a240, 0x4c5d6e) /home/hnakamur/go/src/github.com/hnakamur/ltsvlog/example/main.go:24 +0x22],[main.main() /home/hnakamur/go/src/github.com/hnakamur/ltsvlog/example/main.go:17 +0x11e]
+time:2017-06-01T16:52:33.959833Z	level:Debug	msg:This is a debug message	str:foo	int:234
+time:2017-06-01T16:52:33.959862Z	level:Info	float1:3.14
+time:2017-06-01T16:52:33.959914Z	level:Error	err:add explanation here, err=some error	key1:value1	stack:[main.b(0x2000, 0x38) /home/hnakamur/go/src/github.com/hnakamur/ltsvlog/example/main.go:35 +0xc8],[main.a(0xc42001a240, 0x4c6e2e) /home/hnakamur/go/src/github.com/hnakamur/ltsvlog/example/main.go:25 +0x22],[main.main() /home/hnakamur/go/src/github.com/hnakamur/ltsvlog/example/main.go:18 +0x11e]
 ```
 
 Since these log lines ar long, please scroll horizontally to the right to see all the output.

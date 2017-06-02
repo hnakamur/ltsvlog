@@ -9,14 +9,6 @@ import (
 	"time"
 )
 
-var errorEventPool = &sync.Pool{
-	New: func() interface{} {
-		return &ErrorEvent{
-			buf: make([]byte, 8192),
-		}
-	},
-}
-
 // ErrorEvent is an error with label and value pairs.
 // *ErrroEvent implements the error interface so you can
 // return *ErrorEvent as an error.
@@ -36,16 +28,29 @@ var errorEventPool = &sync.Pool{
 // Please see the example at LTSVLogger.Err for an example usage.
 type ErrorEvent struct {
 	error
-	buf []byte
+	originalErr error
+	buf         []byte
 }
 
 // Err creates an ErrorEvent with the specified error.
 func Err(err error) *ErrorEvent {
-	e := errorEventPool.Get().(*ErrorEvent)
-	e.error = err
-	e.buf = e.buf[:0]
-	e.buf = append(e.buf, "err:"...)
-	e.buf = append(e.buf, escape(err.Error())...)
+	return &ErrorEvent{
+		error:       err,
+		originalErr: err,
+		buf:         make([]byte, 0, 8192),
+	}
+}
+
+// WrapErr wraps an ErrorEvent or a plain error and returns a new error.
+func WrapErr(err error, wrapper func(err error) error) *ErrorEvent {
+	e, ok := err.(*ErrorEvent)
+	if !ok {
+		e = Err(err)
+	}
+
+	if wrapper != nil {
+		e.error = wrapper(e.error)
+	}
 	return e
 }
 
@@ -218,14 +223,21 @@ func (e *ErrorEvent) UTCTime(label string, value time.Time) *ErrorEvent {
 	return e
 }
 
-// Error returns the error string with labeled values in the LTSV format.
+// Error returns the error string without labeled values.
 func (e *ErrorEvent) Error() string {
-	return string(e.buf)
+	return e.error.Error()
+}
+
+// AppendErrorWithValues appends the error string with labeled values to a byte buffer.
+func (e *ErrorEvent) AppendErrorWithValues(buf []byte) []byte {
+	buf = append(buf, "err:"...)
+	buf = append(buf, escape(e.Error())...)
+	return append(buf, e.buf...)
 }
 
 // OriginalError returns the original error.
 func (e *ErrorEvent) OriginalError() error {
-	return e.error
+	return e.originalErr
 }
 
 // appendStack appends a formated stack trace of the calling goroutine to buf
