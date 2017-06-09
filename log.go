@@ -364,7 +364,7 @@ func itoa(buf []byte, i int, wid int) {
 	buf[bp] = byte('0' + i)
 }
 
-var escaper = strings.NewReplacer("\t", "\\t", "\n", "\\n")
+var escaper = strings.NewReplacer("\t", "\\t", "\n", "\\n", "\\", "\\\\")
 
 func escape(s string) string {
 	return escaper.Replace(s)
