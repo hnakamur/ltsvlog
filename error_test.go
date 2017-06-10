@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func TestErrorEvent_Log(t *testing.T) {
+func TestLTSVLogger_Err(t *testing.T) {
 	buf := new(bytes.Buffer)
 	// We don't print time fields to make it easy to compare test results.
 	logger := NewLTSVLogger(buf, true, SetTimeLabel(""))
@@ -175,7 +175,7 @@ func TestErrorEvent_Log(t *testing.T) {
 	}
 }
 
-func TestErrorEvent_Log_NoLevel(t *testing.T) {
+func TestLTSVLogger_Err_NoLevel(t *testing.T) {
 	buf := new(bytes.Buffer)
 	// We don't print time fields to make it easy to compare test results.
 	logger := NewLTSVLogger(buf, true, SetTimeLabel(""), SetLevelLabel(""))
@@ -212,13 +212,13 @@ func TestErrorEvent_Log_NoLevel(t *testing.T) {
 	}
 }
 
-func TestErrorEvent_Stack(t *testing.T) {
+func TestError_Stack(t *testing.T) {
 	buf := new(bytes.Buffer)
 	// We don't print time fields to make it easy to compare test results.
 	logger := NewLTSVLogger(buf, true, SetTimeLabel(""))
 	logger.Err(Err(errors.New("some error")).Stack(""))
 	got := buf.String()
-	wantRegex := "^level:Error\terr:some error\tstack:\\[github.com/hnakamur/ltsvlog\\.TestErrorEvent_Stack\\(0x[0-9a-f]+\\) /.*/src/github\\.com/hnakamur/ltsvlog/error_event_test.go:\\d+ \\+0x[0-9a-f]+\\],.*\n$"
+	wantRegex := "^level:Error\terr:some error\tstack:\\[github.com/hnakamur/ltsvlog\\.TestError_Stack\\(0x[0-9a-f]+\\) /.*/src/github\\.com/hnakamur/ltsvlog/error_test.go:\\d+ \\+0x[0-9a-f]+\\],.*\n$"
 	matched, err := regexp.MatchString(wantRegex, got)
 	if err != nil {
 		t.Fatalf("got error from regexp.MatchString, got=%q, err=%v", got, err)

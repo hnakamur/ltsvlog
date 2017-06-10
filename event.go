@@ -184,7 +184,7 @@ func (e *Event) Float64(label string, value float64) *Event {
 	return e
 }
 
-// Time appends a labeled formatted time value to ErrorEvent.
+// Time appends a labeled formatted time value to Event.
 // The format is the same as that in the Go standard time package.
 // If the format is empty, time.RFC3339 is used.
 func (e *Event) Time(label string, value time.Time, format string) *Event {
