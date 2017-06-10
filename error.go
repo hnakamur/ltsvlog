@@ -227,8 +227,12 @@ func (e *Error) Error() string {
 	return e.error.Error()
 }
 
-// Format formats the error. With %+v and %+q, labeled values are
-// appended to the error message in LTSV format.
+// Format formats the error. With "%v" and "%s", just the
+// error string is returned. With "%+v", the error string
+// with labeled values in LTSV format is returned.
+// With "%q", just the quoted error string is returned.
+// With "%+q", the quoted error string with labled values
+// in LTSV format is returned.
 func (e *Error) Format(s fmt.State, c rune) {
 	switch c {
 	case 'v':
