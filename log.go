@@ -136,13 +136,13 @@ func (l *LTSVLogger) Info() *Event {
 // If err is a *Error, this logs the error with labeled values.
 // If err is not a *Error, this logs the error with the label "err".
 func (l *LTSVLogger) Err(err error) {
-	errorEvent, ok := err.(*Error)
+	myErr, ok := err.(*Error)
 	if !ok {
-		errorEvent = Err(err)
+		myErr = Err(err)
 	}
 	buf := make([]byte, 0, 8192)
 	buf = l.appendPrefixFunc(buf, "Error")
-	buf = errorEvent.AppendErrorWithValues(buf)
+	buf = myErr.AppendErrorWithValues(buf)
 	buf = append(buf, '\n')
 	_, _ = l.writer.Write(buf)
 }
