@@ -217,6 +217,17 @@ func (e *Event) UTCTime(label string, value time.Time) *Event {
 	return e
 }
 
+// Format formats the error. Labeled values are
+// appended to the error message in LTSV format.
+func (e *Event) Format(s fmt.State, c rune) {
+	switch c {
+	case 'v', 's':
+		s.Write(e.buf[:len(e.buf)-1])
+	case 'q':
+		fmt.Fprintf(s, "%q", e.buf[:len(e.buf)-1])
+	}
+}
+
 // Log write this event if the logger which created this event is enabled.
 func (e *Event) Log() {
 	if e.enabled && len(e.buf) > 0 {

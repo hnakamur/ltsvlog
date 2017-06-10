@@ -3,6 +3,7 @@ package ltsvlog
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"runtime"
 	"strconv"
 	"sync"
@@ -228,6 +229,31 @@ func (e *Error) UTCTime(label string, value time.Time) *Error {
 // Error returns the error string without labeled values.
 func (e *Error) Error() string {
 	return e.error.Error()
+}
+
+// Format formats the error. With %+v and %+q, labeled values are
+// appended to the error message in LTSV format.
+func (e *Error) Format(s fmt.State, c rune) {
+	switch c {
+	case 'v':
+		if s.Flag('+') {
+			buf := make([]byte, 0, 8192)
+			buf = e.AppendErrorWithValues(buf)
+			s.Write(buf)
+		} else {
+			io.WriteString(s, e.Error())
+		}
+	case 's':
+		io.WriteString(s, e.Error())
+	case 'q':
+		if s.Flag('+') {
+			buf := make([]byte, 0, 8192)
+			buf = e.AppendErrorWithValues(buf)
+			fmt.Fprintf(s, "%q", buf)
+		} else {
+			fmt.Fprintf(s, "%q", e.Error())
+		}
+	}
 }
 
 // AppendErrorWithValues appends the error string with labeled values to a byte buffer.
