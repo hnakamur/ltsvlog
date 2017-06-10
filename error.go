@@ -3,6 +3,7 @@ package ltsvlog
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"runtime"
 	"strconv"
 	"sync"
@@ -20,10 +21,6 @@ import (
 // Error frees lower level functions from depending on loggers
 // since Error is just a data structure which holds
 // an error, a stacktrace and labeled values.
-//
-// However LTSVLogger.Err depends on the internal structure
-// of Error, so you cannnot use Error with the
-// other logging library than this package.
 //
 // Please see the example at LTSVLogger.Err for an example usage.
 type Error struct {
@@ -228,6 +225,35 @@ func (e *Error) UTCTime(label string, value time.Time) *Error {
 // Error returns the error string without labeled values.
 func (e *Error) Error() string {
 	return e.error.Error()
+}
+
+// Format formats the error. With "%v" and "%s", just the
+// error string is returned. With "%+v", the error string
+// with labeled values in LTSV format is returned.
+// With "%q", just the quoted error string is returned.
+// With "%+q", the quoted error string with labled values
+// in LTSV format is returned.
+func (e *Error) Format(s fmt.State, c rune) {
+	switch c {
+	case 'v':
+		if s.Flag('+') {
+			buf := make([]byte, 0, 8192)
+			buf = e.AppendErrorWithValues(buf)
+			s.Write(buf)
+		} else {
+			io.WriteString(s, e.Error())
+		}
+	case 's':
+		io.WriteString(s, e.Error())
+	case 'q':
+		if s.Flag('+') {
+			buf := make([]byte, 0, 8192)
+			buf = e.AppendErrorWithValues(buf)
+			fmt.Fprintf(s, "%q", buf)
+		} else {
+			fmt.Fprintf(s, "%q", e.Error())
+		}
+	}
 }
 
 // AppendErrorWithValues appends the error string with labeled values to a byte buffer.

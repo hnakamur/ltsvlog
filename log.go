@@ -108,6 +108,8 @@ func (l *LTSVLogger) DebugEnabled() bool {
 }
 
 // Debug returns a new Event for writing a Debug level log.
+// This Event is returned from the internal event pool, so be sure
+// to call Log() to put this event back to the event pool.
 //
 // Note there still exists the cost of evaluating argument values if the debug level is disabled, even though those arguments are not used.
 // So guarding with if and DebugEnabled is recommended.
@@ -123,6 +125,8 @@ func (l *LTSVLogger) Debug() *Event {
 }
 
 // Info returns a new Event for writing a Info level log.
+// This Event is returned from the internal event pool, so be sure
+// to call Log() to put this event back to the event pool.
 func (l *LTSVLogger) Info() *Event {
 	ev := eventPool.Get().(*Event)
 	ev.logger = l
