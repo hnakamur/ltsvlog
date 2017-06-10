@@ -14,8 +14,8 @@
 // This is not checked in this library for performance reason,
 // so it is your responsibility not to contain a colon character in labels.
 //
-// Newline and tab characters in values are escaped with "\\n" and "\\t"
-// respectively.
+// Newline, tab, and backslach characters in values are escaped with
+// "\\n", "\\t", and "\\\\" respectively.
 package ltsvlog
 
 import (
