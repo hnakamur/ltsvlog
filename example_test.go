@@ -70,3 +70,15 @@ func ExampleLTSVLogger_Err() {
 	// Actually we don't test the results.
 	// This example is added just for document purpose.
 }
+
+func ExampleEvent_String() {
+	jsonStr := "{\n\t\"foo\": \"bar\\nbaz\"\n}\n"
+	ltsvlog.Logger.Info().String("json", jsonStr).Log()
+
+	// Output example:
+	// time:2017-06-10T10:22:48.083226Z        level:Info      json:{\n\t"foo": "bar\\nbaz"\n}\n
+	// Output:
+
+	// Actually we don't test the results.
+	// This example is added just for document purpose.
+}

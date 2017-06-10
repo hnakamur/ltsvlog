@@ -15,7 +15,7 @@
 // so it is your responsibility not to contain a colon character in labels.
 //
 // Newline, tab, and backslach characters in values are escaped with
-// "\\n", "\\t", and "\\\\" respectively.
+// "\\n", "\\t", and "\\\\" respectively. Show the example for Event.String.
 package ltsvlog
 
 import (
