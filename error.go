@@ -9,41 +9,41 @@ import (
 	"time"
 )
 
-// ErrorEvent is an error with label and value pairs.
-// *ErrroEvent implements the error interface so you can
-// return *ErrorEvent as an error.
+// Error is an error with label and value pairs.
+// *Error implements the error interface so you can
+// return *Error as an error.
 //
 // This is useful when you would like to log an error with
 // additional labeled values later at the higher level of
 // the callstack.
 //
-// ErrorEvent frees lower level functions from depending on loggers
-// since ErrorEvent is just a data structure which holds
+// Error frees lower level functions from depending on loggers
+// since Error is just a data structure which holds
 // an error, a stacktrace and labeled values.
 //
 // However LTSVLogger.Err depends on the internal structure
-// of ErrorEvent, so you cannnot use ErrorEvent with the
+// of Error, so you cannnot use Error with the
 // other logging library than this package.
 //
 // Please see the example at LTSVLogger.Err for an example usage.
-type ErrorEvent struct {
+type Error struct {
 	error
 	originalErr error
 	buf         []byte
 }
 
-// Err creates an ErrorEvent with the specified error.
-func Err(err error) *ErrorEvent {
-	return &ErrorEvent{
+// Err creates an Error with the specified error.
+func Err(err error) *Error {
+	return &Error{
 		error:       err,
 		originalErr: err,
 		buf:         make([]byte, 0, 8192),
 	}
 }
 
-// WrapErr wraps an ErrorEvent or a plain error and returns a new error.
-func WrapErr(err error, wrapper func(err error) error) *ErrorEvent {
-	e, ok := err.(*ErrorEvent)
+// WrapErr wraps an Error or a plain error and returns a new error.
+func WrapErr(err error, wrapper func(err error) error) *Error {
+	e, ok := err.(*Error)
 	if !ok {
 		e = Err(err)
 	}
@@ -54,9 +54,9 @@ func WrapErr(err error, wrapper func(err error) error) *ErrorEvent {
 	return e
 }
 
-// Stack appends a stacktrace with label "stack" to ErrorEvent.
+// Stack appends a stacktrace with label "stack" to Error.
 // If label is empty, "stack" is used.
-func (e *ErrorEvent) Stack(label string) *ErrorEvent {
+func (e *Error) Stack(label string) *Error {
 	e.buf = append(e.buf, '\t')
 	if label == "" {
 		label = "stack"
@@ -67,8 +67,8 @@ func (e *ErrorEvent) Stack(label string) *ErrorEvent {
 	return e
 }
 
-// String appends a labeled string value to ErrorEvent.
-func (e *ErrorEvent) String(label string, value string) *ErrorEvent {
+// String appends a labeled string value to Error.
+func (e *Error) String(label string, value string) *Error {
 	e.buf = append(e.buf, '\t')
 	e.buf = append(e.buf, label...)
 	e.buf = append(e.buf, ':')
@@ -76,9 +76,9 @@ func (e *ErrorEvent) String(label string, value string) *ErrorEvent {
 	return e
 }
 
-// Stringer appends a labeled string value to ErrorEvent.
+// Stringer appends a labeled string value to Error.
 // The value will be converted to a string with String() method.
-func (e *ErrorEvent) Stringer(label string, value fmt.Stringer) *ErrorEvent {
+func (e *Error) Stringer(label string, value fmt.Stringer) *Error {
 	e.buf = append(e.buf, '\t')
 	e.buf = append(e.buf, label...)
 	e.buf = append(e.buf, ':')
@@ -86,8 +86,8 @@ func (e *ErrorEvent) Stringer(label string, value fmt.Stringer) *ErrorEvent {
 	return e
 }
 
-// Byte appends a labeled byte value to ErrorEvent.
-func (e *ErrorEvent) Byte(label string, value byte) *ErrorEvent {
+// Byte appends a labeled byte value to Error.
+func (e *Error) Byte(label string, value byte) *Error {
 	e.buf = append(e.buf, '\t')
 	e.buf = append(e.buf, label...)
 	e.buf = append(e.buf, ':')
@@ -95,8 +95,8 @@ func (e *ErrorEvent) Byte(label string, value byte) *ErrorEvent {
 	return e
 }
 
-// Bytes appends a labeled bytes value to ErrorEvent.
-func (e *ErrorEvent) Bytes(label string, value []byte) *ErrorEvent {
+// Bytes appends a labeled bytes value to Error.
+func (e *Error) Bytes(label string, value []byte) *Error {
 	e.buf = append(e.buf, '\t')
 	e.buf = append(e.buf, label...)
 	e.buf = append(e.buf, ':')
@@ -104,8 +104,8 @@ func (e *ErrorEvent) Bytes(label string, value []byte) *ErrorEvent {
 	return e
 }
 
-// Sprintf appends a labeled formatted string value to ErrorEvent.
-func (e *ErrorEvent) Sprintf(label, format string, a ...interface{}) *ErrorEvent {
+// Sprintf appends a labeled formatted string value to Error.
+func (e *Error) Sprintf(label, format string, a ...interface{}) *Error {
 	e.buf = append(e.buf, '\t')
 	e.buf = append(e.buf, label...)
 	e.buf = append(e.buf, ':')
@@ -113,8 +113,8 @@ func (e *ErrorEvent) Sprintf(label, format string, a ...interface{}) *ErrorEvent
 	return e
 }
 
-// Bool appends a labeled bool value to ErrorEvent.
-func (e *ErrorEvent) Bool(label string, value bool) *ErrorEvent {
+// Bool appends a labeled bool value to Error.
+func (e *Error) Bool(label string, value bool) *Error {
 	e.buf = append(e.buf, '\t')
 	e.buf = append(e.buf, label...)
 	e.buf = append(e.buf, ':')
@@ -122,28 +122,28 @@ func (e *ErrorEvent) Bool(label string, value bool) *ErrorEvent {
 	return e
 }
 
-// Int appends a labeled int value to ErrorEvent.
-func (e *ErrorEvent) Int(label string, value int) *ErrorEvent {
+// Int appends a labeled int value to Error.
+func (e *Error) Int(label string, value int) *Error {
 	return e.Int64(label, int64(value))
 }
 
-// Int8 appends a labeled int8 value to ErrorEvent.
-func (e *ErrorEvent) Int8(label string, value int8) *ErrorEvent {
+// Int8 appends a labeled int8 value to Error.
+func (e *Error) Int8(label string, value int8) *Error {
 	return e.Int64(label, int64(value))
 }
 
-// Int16 appends a labeled int16 value to ErrorEvent.
-func (e *ErrorEvent) Int16(label string, value int16) *ErrorEvent {
+// Int16 appends a labeled int16 value to Error.
+func (e *Error) Int16(label string, value int16) *Error {
 	return e.Int64(label, int64(value))
 }
 
-// Int32 appends a labeled int32 value to ErrorEvent.
-func (e *ErrorEvent) Int32(label string, value int32) *ErrorEvent {
+// Int32 appends a labeled int32 value to Error.
+func (e *Error) Int32(label string, value int32) *Error {
 	return e.Int64(label, int64(value))
 }
 
-// Int64 appends a labeled int64 value to ErrorEvent.
-func (e *ErrorEvent) Int64(label string, value int64) *ErrorEvent {
+// Int64 appends a labeled int64 value to Error.
+func (e *Error) Int64(label string, value int64) *Error {
 	e.buf = append(e.buf, '\t')
 	e.buf = append(e.buf, label...)
 	e.buf = append(e.buf, ':')
@@ -151,28 +151,28 @@ func (e *ErrorEvent) Int64(label string, value int64) *ErrorEvent {
 	return e
 }
 
-// Uint appends a labeled uint value to ErrorEvent.
-func (e *ErrorEvent) Uint(label string, value uint) *ErrorEvent {
+// Uint appends a labeled uint value to Error.
+func (e *Error) Uint(label string, value uint) *Error {
 	return e.Uint64(label, uint64(value))
 }
 
-// Uint8 appends a labeled uint8 value to ErrorEvent.
-func (e *ErrorEvent) Uint8(label string, value uint8) *ErrorEvent {
+// Uint8 appends a labeled uint8 value to Error.
+func (e *Error) Uint8(label string, value uint8) *Error {
 	return e.Uint64(label, uint64(value))
 }
 
-// Uint16 appends a labeled uint16 value to ErrorEvent.
-func (e *ErrorEvent) Uint16(label string, value uint16) *ErrorEvent {
+// Uint16 appends a labeled uint16 value to Error.
+func (e *Error) Uint16(label string, value uint16) *Error {
 	return e.Uint64(label, uint64(value))
 }
 
-// Uint32 appends a labeled uint32 value to ErrorEvent.
-func (e *ErrorEvent) Uint32(label string, value uint32) *ErrorEvent {
+// Uint32 appends a labeled uint32 value to Error.
+func (e *Error) Uint32(label string, value uint32) *Error {
 	return e.Uint64(label, uint64(value))
 }
 
-// Uint64 appends a labeled uint64 value to ErrorEvent.
-func (e *ErrorEvent) Uint64(label string, value uint64) *ErrorEvent {
+// Uint64 appends a labeled uint64 value to Error.
+func (e *Error) Uint64(label string, value uint64) *Error {
 	e.buf = append(e.buf, '\t')
 	e.buf = append(e.buf, label...)
 	e.buf = append(e.buf, ':')
@@ -180,8 +180,8 @@ func (e *ErrorEvent) Uint64(label string, value uint64) *ErrorEvent {
 	return e
 }
 
-// Float32 appends a labeled float32 value to ErrorEvent.
-func (e *ErrorEvent) Float32(label string, value float32) *ErrorEvent {
+// Float32 appends a labeled float32 value to Error.
+func (e *Error) Float32(label string, value float32) *Error {
 	e.buf = append(e.buf, '\t')
 	e.buf = append(e.buf, label...)
 	e.buf = append(e.buf, ':')
@@ -189,8 +189,8 @@ func (e *ErrorEvent) Float32(label string, value float32) *ErrorEvent {
 	return e
 }
 
-// Float64 appends a labeled float64 value to ErrorEvent.
-func (e *ErrorEvent) Float64(label string, value float64) *ErrorEvent {
+// Float64 appends a labeled float64 value to Error.
+func (e *Error) Float64(label string, value float64) *Error {
 	e.buf = append(e.buf, '\t')
 	e.buf = append(e.buf, label...)
 	e.buf = append(e.buf, ':')
@@ -198,10 +198,10 @@ func (e *ErrorEvent) Float64(label string, value float64) *ErrorEvent {
 	return e
 }
 
-// Time appends a labeled formatted time value to ErrorEvent.
+// Time appends a labeled formatted time value to Error.
 // The format is the same as that in the Go standard time package.
 // If the format is empty, time.RFC3339 is used.
-func (e *ErrorEvent) Time(label string, value time.Time, format string) *ErrorEvent {
+func (e *Error) Time(label string, value time.Time, format string) *Error {
 	e.buf = append(e.buf, '\t')
 	e.buf = append(e.buf, label...)
 	e.buf = append(e.buf, ':')
@@ -212,10 +212,10 @@ func (e *ErrorEvent) Time(label string, value time.Time, format string) *ErrorEv
 	return e
 }
 
-// UTCTime appends a labeled time value to ErrorEvent.
+// UTCTime appends a labeled time value to Error.
 // The time value is converted to UTC and then printed
 // in the same format as the log time field.
-func (e *ErrorEvent) UTCTime(label string, value time.Time) *ErrorEvent {
+func (e *Error) UTCTime(label string, value time.Time) *Error {
 	e.buf = append(e.buf, '\t')
 	e.buf = append(e.buf, label...)
 	e.buf = append(e.buf, ':')
@@ -224,19 +224,19 @@ func (e *ErrorEvent) UTCTime(label string, value time.Time) *ErrorEvent {
 }
 
 // Error returns the error string without labeled values.
-func (e *ErrorEvent) Error() string {
+func (e *Error) Error() string {
 	return e.error.Error()
 }
 
 // AppendErrorWithValues appends the error string with labeled values to a byte buffer.
-func (e *ErrorEvent) AppendErrorWithValues(buf []byte) []byte {
+func (e *Error) AppendErrorWithValues(buf []byte) []byte {
 	buf = append(buf, "err:"...)
 	buf = append(buf, escape(e.Error())...)
 	return append(buf, e.buf...)
 }
 
 // OriginalError returns the original error.
-func (e *ErrorEvent) OriginalError() error {
+func (e *Error) OriginalError() error {
 	return e.originalErr
 }
 

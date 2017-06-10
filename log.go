@@ -254,10 +254,10 @@ func (l *LTSVLogger) ErrorWithStack(lv ...LV) {
 }
 
 // Err writes a log for an error with the error level.
-// If err is a *ErrorEvent, this logs the error with labeled values.
-// If err is not a *ErrorEvent, this logs the error with the label "err".
+// If err is a *Error, this logs the error with labeled values.
+// If err is not a *Error, this logs the error with the label "err".
 func (l *LTSVLogger) Err(err error) {
-	errorEvent, ok := err.(*ErrorEvent)
+	errorEvent, ok := err.(*Error)
 	if !ok {
 		errorEvent = Err(err)
 	}
