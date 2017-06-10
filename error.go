@@ -22,10 +22,6 @@ import (
 // since Error is just a data structure which holds
 // an error, a stacktrace and labeled values.
 //
-// However LTSVLogger.Err depends on the internal structure
-// of Error, so you cannnot use Error with the
-// other logging library than this package.
-//
 // Please see the example at LTSVLogger.Err for an example usage.
 type Error struct {
 	error
