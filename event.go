@@ -48,7 +48,7 @@ func (e *Event) Stringer(label string, value fmt.Stringer) *Event {
 	return e
 }
 
-// Bytes appends a labeled bytes value to Event.
+// Bytes appends a labeled bytes value in hex format to Event.
 func (e *Event) Bytes(label string, value []byte) *Event {
 	if !e.enabled {
 		return e
@@ -203,7 +203,9 @@ func (e *Event) Time(label string, value time.Time, format string) *Event {
 
 // UTCTime appends a labeled UTC time value to Event.
 // The time value is converted to UTC and then printed
-// in the same format as the log time field.
+// in the same format as the log time field, that is
+// the ISO8601 format with microsecond precision and
+// the timezone "Z".
 func (e *Event) UTCTime(label string, value time.Time) *Event {
 	if !e.enabled {
 		return e

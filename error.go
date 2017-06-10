@@ -95,7 +95,7 @@ func (e *Error) Byte(label string, value byte) *Error {
 	return e
 }
 
-// Bytes appends a labeled bytes value to Error.
+// Bytes appends a labeled bytes value in hex format to Error.
 func (e *Error) Bytes(label string, value []byte) *Error {
 	e.buf = append(e.buf, '\t')
 	e.buf = append(e.buf, label...)
@@ -214,7 +214,9 @@ func (e *Error) Time(label string, value time.Time, format string) *Error {
 
 // UTCTime appends a labeled time value to Error.
 // The time value is converted to UTC and then printed
-// in the same format as the log time field.
+// in the same format as the log time field, that is
+// the ISO8601 format with microsecond precision and
+// the timezone "Z".
 func (e *Error) UTCTime(label string, value time.Time) *Error {
 	e.buf = append(e.buf, '\t')
 	e.buf = append(e.buf, label...)
