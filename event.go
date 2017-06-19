@@ -167,7 +167,7 @@ func (e *Event) Float32(label string, value float32) *Event {
 	}
 	e.buf = append(e.buf, label...)
 	e.buf = append(e.buf, ':')
-	e.buf = append(e.buf, strconv.FormatFloat(float64(value), 'g', -1, 32)...)
+	e.buf = strconv.AppendFloat(e.buf, float64(value), 'g', -1, 32)
 	e.buf = append(e.buf, '\t')
 	return e
 }
@@ -179,7 +179,7 @@ func (e *Event) Float64(label string, value float64) *Event {
 	}
 	e.buf = append(e.buf, label...)
 	e.buf = append(e.buf, ':')
-	e.buf = append(e.buf, strconv.FormatFloat(value, 'g', -1, 64)...)
+	e.buf = strconv.AppendFloat(e.buf, value, 'g', -1, 64)
 	e.buf = append(e.buf, '\t')
 	return e
 }
