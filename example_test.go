@@ -64,7 +64,7 @@ func ExampleLTSVLogger_Err() {
 	}
 
 	// Output example:
-	// time:2017-06-10T13:40:38.344079Z	level:Error	err:add explanation here, err=some error	key1:value1	stack:[main.main.func1(0xc420041f48, 0x40e038) /home/hnakamur/go/src/github.com/hnakamur/ltsvlog/example/err/main.go:12 +0x170],[main.main.func2(0x4ae320, 0xc42000e2a0) /home/hnakamur/go/src/github.com/hnakamur/ltsvlog/example/err/main.go:15 +0x2a],[main.main() /home/hnakamur/go/src/github.com/hnakamur/ltsvlog/example/err/main.go:24 +0x65]	key2:value2
+	// time:2017-06-10T13:40:38.344079Z	level:Error	err:add explanation here, err=some error	key1:value1	stack:main.main.func1 /home/hnakamur/go/src/github.com/hnakamur/ltsvlog/example/err/main.go:12,main.main.func2 /home/hnakamur/go/src/github.com/hnakamur/ltsvlog/example/err/main.go:15,main.main /home/hnakamur/go/src/github.com/hnakamur/ltsvlog/example/err/main.go:24,runtime.main /usr/local/go/src/runtime/proc.go:194,runtime.goexit /usr/local/go/src/runtime/asm_amd64.s:2338	key2:value2
 	// Output:
 
 	// Actually we don't test the results.

@@ -1,12 +1,10 @@
 package ltsvlog
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"runtime"
 	"strconv"
-	"sync"
 	"time"
 )
 
@@ -271,42 +269,22 @@ func (e *Error) OriginalError() error {
 // appendStack appends a formated stack trace of the calling goroutine to buf
 // in one line format which suitable for LTSV logs.
 func appendStack(buf []byte, skip int) []byte {
-	src := bufPool.Get().([]byte)
-	var n int
-	for {
-		n = runtime.Stack(src, false)
-		if n < len(src) {
-			break
-		}
-		src = make([]byte, len(src)*2)
-	}
-
-	p := src[:n]
-	for j := 0; j < 1+2*skip; j++ {
-		i := bytes.IndexByte(p, '\n')
-		p = p[i+1:]
-	}
-
-	for len(p) > 0 {
-		buf = append(buf, '[')
-		i := bytes.IndexByte(p, '\n')
-		buf = append(buf, p[:i]...)
-		buf = append(buf, ' ')
-		p = p[i+2:]
-		i = bytes.IndexByte(p, '\n')
-		buf = append(buf, p[:i]...)
-		buf = append(buf, ']')
-		p = p[i+1:]
-		if len(p) > 0 {
+	const maxStackCount = 128
+	var pcs [maxStackCount]uintptr
+	n := runtime.Callers(skip+1, pcs[:])
+	for i := 0; i < n; i++ {
+		pc := pcs[i]
+		fn := runtime.FuncForPC(pc)
+		absPath, line := fn.FileLine(pc)
+		name := fn.Name()
+		if i > 0 {
 			buf = append(buf, ',')
 		}
+		buf = append(buf, name...)
+		buf = append(buf, ' ')
+		buf = append(buf, absPath...)
+		buf = append(buf, ':')
+		buf = strconv.AppendInt(buf, int64(line), 10)
 	}
-	bufPool.Put(src)
 	return buf
-}
-
-var bufPool = &sync.Pool{
-	New: func() interface{} {
-		return make([]byte, 8192)
-	},
 }
