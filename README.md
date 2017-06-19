@@ -54,7 +54,7 @@ An example output:
 ```
 time:2017-06-01T16:52:33.959833Z	level:Debug	msg:This is a debug message	str:foo	int:234
 time:2017-06-01T16:52:33.959862Z	level:Info	float1:3.14
-time:2017-06-01T16:52:33.959914Z	level:Error	err:add explanation here, err=some error       key1:value1     stack:main.b /home/hnakamur/go/src/github.com/hnakamur/ltsvlog/example/main.go:43,main.a /home/hnakamur/go/src/github.com/hnakamur/ltsvlog/example/main.go:33,main.main /home/hnakamur/go/src/github.com/hnakamur/ltsvlog/example/main.go:21,runtime.main /usr/local/go/src/runtime/proc.go:194,runtime.goexit /usr/local/go/src/runtime/asm_amd64.s:2338
+time:2017-06-01T16:52:33.959914Z	level:Error	err:add explanation here, err=some error       key1:value1     stack:main.b github.com/hnakamur/ltsvlog/example/main.go:43,main.a github.com/hnakamur/ltsvlog/example/main.go:33,main.main github.com/hnakamur/ltsvlog/example/main.go:21,runtime.main runtime/proc.go:194,runtime.goexit runtime/asm_amd64.s:2338
 ```
 
 Since these log lines ar long, please scroll horizontally to the right to see all the output.

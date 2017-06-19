@@ -3,8 +3,10 @@ package ltsvlog
 import (
 	"fmt"
 	"io"
+	"path/filepath"
 	"runtime"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -269,22 +271,52 @@ func (e *Error) OriginalError() error {
 // appendStack appends a formated stack trace of the calling goroutine to buf
 // in one line format which suitable for LTSV logs.
 func appendStack(buf []byte, skip int) []byte {
+	goPaths := make(map[string]struct{})
 	const maxStackCount = 128
 	var pcs [maxStackCount]uintptr
-	n := runtime.Callers(skip+1, pcs[:])
+	n := runtime.Callers(0, pcs[:])
 	for i := 0; i < n; i++ {
 		pc := pcs[i]
 		fn := runtime.FuncForPC(pc)
 		absPath, line := fn.FileLine(pc)
 		name := fn.Name()
-		if i > 0 {
-			buf = append(buf, ',')
+
+		pos := strings.LastIndexByte(name, filepath.Separator)
+		pos += strings.IndexByte(name[pos+1:], '.') + 1
+		pkg := name[:pos]
+		var relPath string
+		if pkg == "main" {
+			relPath = absPath
+			for goPath := range goPaths {
+				if strings.HasPrefix(absPath, goPath) {
+					relPath = absPath[len(goPath):]
+					break
+				}
+			}
+		} else {
+			if strings.HasSuffix(pkg, "_test") {
+				pkg = pkg[:len(pkg)-len("_test")]
+			}
+			pos = strings.LastIndex(absPath, pkg)
+			if pos == -1 {
+				relPath = absPath
+			} else {
+				relPath = absPath[pos:]
+				goPath := absPath[:pos]
+				goPaths[goPath] = struct{}{}
+			}
 		}
-		buf = append(buf, name...)
-		buf = append(buf, ' ')
-		buf = append(buf, absPath...)
-		buf = append(buf, ':')
-		buf = strconv.AppendInt(buf, int64(line), 10)
+
+		if i >= skip+1 {
+			if i > skip+1 {
+				buf = append(buf, ',')
+			}
+			buf = append(buf, name...)
+			buf = append(buf, ' ')
+			buf = append(buf, relPath...)
+			buf = append(buf, ':')
+			buf = strconv.AppendInt(buf, int64(line), 10)
+		}
 	}
 	return buf
 }

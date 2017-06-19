@@ -218,7 +218,7 @@ func TestError_Stack(t *testing.T) {
 	logger := NewLTSVLogger(buf, true, SetTimeLabel(""))
 	logger.Err(Err(errors.New("some error")).Stack(""))
 	got := buf.String()
-	wantRegex := "^level:Error\terr:some error\tstack:\\[github.com/hnakamur/ltsvlog\\.TestError_Stack\\(0x[0-9a-f]+\\) /.*/src/github\\.com/hnakamur/ltsvlog/error_test.go:\\d+ \\+0x[0-9a-f]+\\],.*\n$"
+	wantRegex := "^level:Error\terr:some error\tstack:github.com/hnakamur/ltsvlog\\.TestError_Stack github\\.com/hnakamur/ltsvlog/error_test.go:\\d+,.*\n$"
 	matched, err := regexp.MatchString(wantRegex, got)
 	if err != nil {
 		t.Fatalf("got error from regexp.MatchString, got=%q, err=%v", got, err)
