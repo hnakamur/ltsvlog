@@ -294,12 +294,19 @@ func appendStack(buf []byte, skip int) []byte {
 				}
 			}
 		} else {
-			if strings.HasSuffix(pkg, "_test") {
-				pkg = pkg[:len(pkg)-len("_test")]
-			}
 			pos = strings.LastIndex(absPath, pkg)
 			if pos == -1 {
-				relPath = absPath
+				if strings.HasSuffix(pkg, "_test") {
+					pkg = pkg[:len(pkg)-len("_test")]
+				}
+				pos = strings.LastIndex(absPath, pkg)
+				if pos == -1 {
+					relPath = absPath
+				} else {
+					relPath = absPath[pos:]
+					goPath := absPath[:pos]
+					goPaths[goPath] = struct{}{}
+				}
 			} else {
 				relPath = absPath[pos:]
 				goPath := absPath[:pos]
