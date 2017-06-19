@@ -1,12 +1,12 @@
 package ltsvlog
 
 import (
-	"bytes"
 	"fmt"
 	"io"
+	"path/filepath"
 	"runtime"
 	"strconv"
-	"sync"
+	"strings"
 	"time"
 )
 
@@ -271,42 +271,52 @@ func (e *Error) OriginalError() error {
 // appendStack appends a formated stack trace of the calling goroutine to buf
 // in one line format which suitable for LTSV logs.
 func appendStack(buf []byte, skip int) []byte {
-	src := bufPool.Get().([]byte)
-	var n int
-	for {
-		n = runtime.Stack(src, false)
-		if n < len(src) {
-			break
-		}
-		src = make([]byte, len(src)*2)
-	}
+	goPaths := make(map[string]struct{})
+	const maxStackCount = 128
+	var pcs [maxStackCount]uintptr
+	n := runtime.Callers(0, pcs[:])
+	for i := 0; i < n; i++ {
+		pc := pcs[i]
+		fn := runtime.FuncForPC(pc)
+		absPath, line := fn.FileLine(pc)
+		name := fn.Name()
 
-	p := src[:n]
-	for j := 0; j < 1+2*skip; j++ {
-		i := bytes.IndexByte(p, '\n')
-		p = p[i+1:]
-	}
+		pos := strings.LastIndexByte(name, filepath.Separator)
+		pos += strings.IndexByte(name[pos+1:], '.') + 1
+		pkg := name[:pos]
+		var relPath string
+		if pkg == "main" {
+			relPath = absPath
+			for goPath := range goPaths {
+				if strings.HasPrefix(absPath, goPath) {
+					relPath = absPath[len(goPath):]
+					break
+				}
+			}
+		} else {
+			if strings.HasSuffix(pkg, "_test") {
+				pkg = pkg[:len(pkg)-len("_test")]
+			}
+			pos = strings.LastIndex(absPath, pkg)
+			if pos == -1 {
+				relPath = absPath
+			} else {
+				relPath = absPath[pos:]
+				goPath := absPath[:pos]
+				goPaths[goPath] = struct{}{}
+			}
+		}
 
-	for len(p) > 0 {
-		buf = append(buf, '[')
-		i := bytes.IndexByte(p, '\n')
-		buf = append(buf, p[:i]...)
-		buf = append(buf, ' ')
-		p = p[i+2:]
-		i = bytes.IndexByte(p, '\n')
-		buf = append(buf, p[:i]...)
-		buf = append(buf, ']')
-		p = p[i+1:]
-		if len(p) > 0 {
-			buf = append(buf, ',')
+		if i >= skip+1 {
+			if i > skip+1 {
+				buf = append(buf, ',')
+			}
+			buf = append(buf, name...)
+			buf = append(buf, ' ')
+			buf = append(buf, relPath...)
+			buf = append(buf, ':')
+			buf = strconv.AppendInt(buf, int64(line), 10)
 		}
 	}
-	bufPool.Put(src)
 	return buf
-}
-
-var bufPool = &sync.Pool{
-	New: func() interface{} {
-		return make([]byte, 8192)
-	},
 }
