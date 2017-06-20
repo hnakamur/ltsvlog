@@ -271,8 +271,18 @@ func (e *Error) OriginalError() error {
 // appendStack appends a formated stack trace of the calling goroutine to buf
 // in one line format which suitable for LTSV logs.
 func appendStack(buf []byte, skip int) []byte {
-	goPaths := make(map[string]struct{})
 	const maxStackCount = 128
+	goPaths := make([]string, 0, maxStackCount)
+
+	addGoPath := func(goPath string) {
+		for _, p := range goPaths {
+			if goPath == p {
+				return
+			}
+		}
+		goPaths = append(goPaths, goPath)
+	}
+
 	var pcs [maxStackCount]uintptr
 	n := runtime.Callers(0, pcs[:])
 	for i := 0; i < n; i++ {
@@ -287,7 +297,7 @@ func appendStack(buf []byte, skip int) []byte {
 		var relPath string
 		if pkg == "main" {
 			relPath = absPath
-			for goPath := range goPaths {
+			for _, goPath := range goPaths {
 				if strings.HasPrefix(absPath, goPath) {
 					relPath = absPath[len(goPath):]
 					break
@@ -305,12 +315,12 @@ func appendStack(buf []byte, skip int) []byte {
 				} else {
 					relPath = absPath[pos:]
 					goPath := absPath[:pos]
-					goPaths[goPath] = struct{}{}
+					addGoPath(goPath)
 				}
 			} else {
 				relPath = absPath[pos:]
 				goPath := absPath[:pos]
-				goPaths[goPath] = struct{}{}
+				addGoPath(goPath)
 			}
 		}
 
