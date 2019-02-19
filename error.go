@@ -17,6 +17,19 @@ type LTSVError interface {
 	LTSVError() string
 }
 
+// LTSVError is an interface for returning the error level.
+// If an error implements this interface, the result error level is
+// used in ltsvlog.Logger.Err().
+type ErrorLevel interface {
+	ErrorLevel() string
+}
+
+// StackWanted in an interaface for returning whether the call stack should be
+// printed in log.
+type StackWanted interface {
+	StackWanted() bool
+}
+
 // Error is an error with label and value pairs.
 // *Error implements the error interface so you can
 // return *Error as an error.
@@ -287,6 +300,14 @@ func (e *Error) AppendErrorWithValues(buf []byte) []byte {
 	return append(buf, e.buf...)
 }
 
+// Unwrap returns the original error.
+// Unwrap implements golang.org/x/xerrors.Wrapper interface.
+func (e *Error) Unwrap() error {
+	return e.originalErr
+}
+
+// DEPRECATED: Use Unwrap instead.
+//
 // OriginalError returns the original error.
 func (e *Error) OriginalError() error {
 	return e.originalErr

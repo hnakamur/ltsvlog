@@ -24,6 +24,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"golang.org/x/xerrors"
 )
 
 // LogWriter is a LTSV logger interface
@@ -146,27 +148,36 @@ func (l *LTSVLogger) Err(err error) {
 		myErr = Err(err)
 	}
 	buf := make([]byte, 0, 8192)
-	buf = l.appendPrefixFunc(buf, "Error")
+	origErr := myErr.OriginalError()
+	buf = l.appendPrefixFunc(buf, errorLevel(origErr))
 	buf = myErr.AppendErrorWithValues(buf)
+	if stackWanted(origErr) {
+		buf = append(buf, "\tstack:"...)
+		buf = append(buf, Escape(fmt.Sprintf("%+v", origErr))...)
+	}
 	buf = append(buf, '\n')
 	_, _ = l.writer.Write(buf)
 }
 
-// ErrWithStack writes a log for an error with the error level and the call stack.
-// If err is a *Error, this logs the error with labeled values.
-// If err is not a *Error, this logs the error with the label "err".
-func (l *LTSVLogger) ErrWithStack(err error) {
-	myErr, ok := err.(*Error)
-	if !ok {
-		myErr = Err(err)
+func stackWanted(err error) bool {
+	for err != nil {
+		if e2, ok := err.(StackWanted); ok {
+			return e2.StackWanted()
+		}
+		if e2, ok := err.(xerrors.Wrapper); ok {
+			err = e2.Unwrap()
+		} else {
+			break
+		}
 	}
-	buf := make([]byte, 0, 8192)
-	buf = l.appendPrefixFunc(buf, "Error")
-	buf = myErr.AppendErrorWithValues(buf)
-	buf = append(buf, "\tstack:"...)
-	buf = append(buf, Escape(fmt.Sprintf("%+v", myErr.OriginalError()))...)
-	buf = append(buf, '\n')
-	_, _ = l.writer.Write(buf)
+	return false
+}
+
+func errorLevel(err error) string {
+	if e2, ok := err.(ErrorLevel); ok {
+		return e2.ErrorLevel()
+	}
+	return "Error"
 }
 
 func appendPrefixFunc(timeLabel, levelLabel string) appendPrefixFuncType {
