@@ -224,7 +224,9 @@ func itoa(buf []byte, i int, wid int) {
 
 var escaper = strings.NewReplacer("\t", "\\t", "\n", "\\n", "\\", "\\\\")
 
-func escape(s string) string {
+// Escape escapes a LTSV value.
+// It replaces "\t", "\n", "\\" with prepending prefix "\\".
+func Escape(s string) string {
 	return escaper.Replace(s)
 }
 

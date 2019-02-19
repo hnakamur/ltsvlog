@@ -69,7 +69,7 @@ func (e *Error) String(label string, value string) *Error {
 	e.buf = append(e.buf, '\t')
 	e.buf = append(e.buf, label...)
 	e.buf = append(e.buf, ':')
-	e.buf = append(e.buf, escape(value)...)
+	e.buf = append(e.buf, Escape(value)...)
 	return e
 }
 
@@ -79,7 +79,7 @@ func (e *Error) Stringer(label string, value fmt.Stringer) *Error {
 	e.buf = append(e.buf, '\t')
 	e.buf = append(e.buf, label...)
 	e.buf = append(e.buf, ':')
-	e.buf = append(e.buf, escape(value.String())...)
+	e.buf = append(e.buf, Escape(value.String())...)
 	return e
 }
 
@@ -106,7 +106,7 @@ func (e *Error) Fmt(label, format string, a ...interface{}) *Error {
 	e.buf = append(e.buf, '\t')
 	e.buf = append(e.buf, label...)
 	e.buf = append(e.buf, ':')
-	e.buf = append(e.buf, escape(fmt.Sprintf(format, a...))...)
+	e.buf = append(e.buf, Escape(fmt.Sprintf(format, a...))...)
 	return e
 }
 
@@ -117,7 +117,7 @@ func (e *Error) Sprintf(label, format string, a ...interface{}) *Error {
 	e.buf = append(e.buf, '\t')
 	e.buf = append(e.buf, label...)
 	e.buf = append(e.buf, ':')
-	e.buf = append(e.buf, escape(fmt.Sprintf(format, a...))...)
+	e.buf = append(e.buf, Escape(fmt.Sprintf(format, a...))...)
 	return e
 }
 
@@ -216,7 +216,7 @@ func (e *Error) Time(label string, value time.Time, format string) *Error {
 	if format == "" {
 		format = time.RFC3339
 	}
-	e.buf = append(e.buf, escape(value.Format(format))...)
+	e.buf = append(e.buf, Escape(value.Format(format))...)
 	return e
 }
 
@@ -270,7 +270,7 @@ func (e *Error) Format(s fmt.State, c rune) {
 // AppendErrorWithValues appends the error string with labeled values to a byte buffer.
 func (e *Error) AppendErrorWithValues(buf []byte) []byte {
 	buf = append(buf, "err:"...)
-	buf = append(buf, escape(e.Error())...)
+	buf = append(buf, Escape(e.Error())...)
 	return append(buf, e.buf...)
 }
 

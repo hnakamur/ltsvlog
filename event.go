@@ -30,7 +30,7 @@ func (e *Event) String(label string, value string) *Event {
 	}
 	e.buf = append(e.buf, label...)
 	e.buf = append(e.buf, ':')
-	e.buf = append(e.buf, escape(value)...)
+	e.buf = append(e.buf, Escape(value)...)
 	e.buf = append(e.buf, '\t')
 	return e
 }
@@ -43,7 +43,7 @@ func (e *Event) Stringer(label string, value fmt.Stringer) *Event {
 	}
 	e.buf = append(e.buf, label...)
 	e.buf = append(e.buf, ':')
-	e.buf = append(e.buf, escape(value.String())...)
+	e.buf = append(e.buf, Escape(value.String())...)
 	e.buf = append(e.buf, '\t')
 	return e
 }
@@ -67,7 +67,7 @@ func (e *Event) Fmt(label, format string, a ...interface{}) *Event {
 	}
 	e.buf = append(e.buf, label...)
 	e.buf = append(e.buf, ':')
-	e.buf = append(e.buf, escape(fmt.Sprintf(format, a...))...)
+	e.buf = append(e.buf, Escape(fmt.Sprintf(format, a...))...)
 	e.buf = append(e.buf, '\t')
 	return e
 }
@@ -81,7 +81,7 @@ func (e *Event) Sprintf(label, format string, a ...interface{}) *Event {
 	}
 	e.buf = append(e.buf, label...)
 	e.buf = append(e.buf, ':')
-	e.buf = append(e.buf, escape(fmt.Sprintf(format, a...))...)
+	e.buf = append(e.buf, Escape(fmt.Sprintf(format, a...))...)
 	e.buf = append(e.buf, '\t')
 	return e
 }
@@ -210,7 +210,7 @@ func (e *Event) Time(label string, value time.Time, format string) *Event {
 	if format == "" {
 		format = time.RFC3339
 	}
-	e.buf = append(e.buf, escape(value.Format(format))...)
+	e.buf = append(e.buf, Escape(value.Format(format))...)
 	e.buf = append(e.buf, '\t')
 	return e
 }
