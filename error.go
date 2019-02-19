@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"golang.org/x/xerrors"
 )
 
 // LTSVError is an interface for returning error messages in LTSV format like
@@ -291,8 +293,20 @@ func (e *Error) Format(s fmt.State, c rune) {
 // If e.OriginalError() implements LTSVError interface, AppendErrorWithValues uses
 // the result of LTSVError() as the error string.
 func (e *Error) AppendErrorWithValues(buf []byte) []byte {
-	if e2, ok := e.OriginalError().(LTSVError); ok {
+	err := e.Unwrap()
+	if e2, ok := err.(LTSVError); ok {
 		buf = append(buf, e2.LTSVError()...)
+		for {
+			if e2, ok := err.(xerrors.Wrapper); ok {
+				err = e2.Unwrap()
+				if e2, ok := err.(LTSVError); ok {
+					buf = append(buf, '\t')
+					buf = append(buf, e2.LTSVError()...)
+				}
+			} else {
+				break
+			}
+		}
 	} else {
 		buf = append(buf, "err:"...)
 		buf = append(buf, Escape(e.Error())...)
