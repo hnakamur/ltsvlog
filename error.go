@@ -10,6 +10,13 @@ import (
 	"time"
 )
 
+// LTSVError is an interface for returning error messages in LTSV format like
+// "label1:value1\tlabel2:value2".
+// Values must be escaped with ltsvlog.Escape().
+type LTSVError interface {
+	LTSVError() string
+}
+
 // Error is an error with label and value pairs.
 // *Error implements the error interface so you can
 // return *Error as an error.
@@ -268,9 +275,15 @@ func (e *Error) Format(s fmt.State, c rune) {
 }
 
 // AppendErrorWithValues appends the error string with labeled values to a byte buffer.
+// If e.OriginalError() implements LTSVError interface, AppendErrorWithValues uses
+// the result of LTSVError() as the error string.
 func (e *Error) AppendErrorWithValues(buf []byte) []byte {
-	buf = append(buf, "err:"...)
-	buf = append(buf, Escape(e.Error())...)
+	if e2, ok := e.OriginalError().(LTSVError); ok {
+		buf = append(buf, e2.LTSVError()...)
+	} else {
+		buf = append(buf, "err:"...)
+		buf = append(buf, Escape(e.Error())...)
+	}
 	return append(buf, e.buf...)
 }
 
