@@ -19,6 +19,7 @@
 package ltsvlog
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -147,6 +148,23 @@ func (l *LTSVLogger) Err(err error) {
 	buf := make([]byte, 0, 8192)
 	buf = l.appendPrefixFunc(buf, "Error")
 	buf = myErr.AppendErrorWithValues(buf)
+	buf = append(buf, '\n')
+	_, _ = l.writer.Write(buf)
+}
+
+// ErrWithStack writes a log for an error with the error level and the call stack.
+// If err is a *Error, this logs the error with labeled values.
+// If err is not a *Error, this logs the error with the label "err".
+func (l *LTSVLogger) ErrWithStack(err error) {
+	myErr, ok := err.(*Error)
+	if !ok {
+		myErr = Err(err)
+	}
+	buf := make([]byte, 0, 8192)
+	buf = l.appendPrefixFunc(buf, "Error")
+	buf = myErr.AppendErrorWithValues(buf)
+	buf = append(buf, "\tstack:"...)
+	buf = append(buf, Escape(fmt.Sprintf("%+v", myErr.OriginalError()))...)
 	buf = append(buf, '\n')
 	_, _ = l.writer.Write(buf)
 }
