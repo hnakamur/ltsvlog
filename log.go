@@ -23,6 +23,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"github.com/hnakamur/errstack"
 )
 
 // LogWriter is a LTSV logger interface
@@ -137,16 +139,37 @@ func (l *LTSVLogger) Info() *Event {
 }
 
 // Err writes a log for an error with the error level.
-// If err is a *Error, this logs the error with labeled values.
-// If err is not a *Error, this logs the error with the label "err".
+// It writes the err.Error() value with the label "err".
+//
+// If the result of github.com/hnakamur/errstack.LV(err)
+// is not empty, then the pairs of labels and values are
+// appended.
+//
+// Also, if the result of github.com/hnakamur/errstack.Stack(err)
+// is not empty, then the call stack value with the "stack"
+// label is appended.
 func (l *LTSVLogger) Err(err error) {
-	myErr, ok := err.(*Error)
-	if !ok {
-		myErr = Err(err)
-	}
 	buf := make([]byte, 0, 8192)
 	buf = l.appendPrefixFunc(buf, "Error")
-	buf = myErr.AppendErrorWithValues(buf)
+	buf = append(buf, "err:"...)
+	buf = append(buf, err.Error()...)
+	if lv := errstack.LV(err); len(lv) > 0 {
+		for i := 0; i < len(lv); i += 2 {
+			buf = append(buf, '\t')
+			buf = append(buf, lv[i]...)
+			buf = append(buf, ':')
+			buf = append(buf, escape(lv[i+1])...)
+		}
+	}
+	if ff := errstack.Stack(err); len(ff) > 0 {
+		buf = append(buf, "\tstack:"...)
+		for i, f := range ff {
+			if i > 0 {
+				buf = append(buf, ' ')
+			}
+			buf = append(buf, f.String()...)
+		}
+	}
 	buf = append(buf, '\n')
 	_, _ = l.writer.Write(buf)
 }
