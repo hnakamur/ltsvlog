@@ -145,9 +145,9 @@ func TestEvent_Log(t *testing.T) {
 			want: "level:Info\tmin_uint64:0\tmax_uint64:18446744073709551615\n",
 		},
 		{
-			name: "sprintf",
+			name: "fmt",
 			f: func(l *LTSVLogger) {
-				l.Info().Sprintf("pi", "%.2f", math.Pi).Log()
+				l.Info().Fmt("pi", "%.2f", math.Pi).Log()
 			},
 			want: "level:Info\tpi:3.14\n",
 		},

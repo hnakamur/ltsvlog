@@ -26,7 +26,7 @@ func main() {
 			String("str", "foo").Int("int", 234).Log()
 	}
 
-	ltsvlog.Logger.Info().Sprintf("float1", "%3.2f", 3.14).Log()
+	ltsvlog.Logger.Info().Fmt("float1", "%3.2f", 3.14).Log()
 
 	err := a()
 	if err != nil {

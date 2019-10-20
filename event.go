@@ -72,20 +72,6 @@ func (e *Event) Fmt(label, format string, a ...interface{}) *Event {
 	return e
 }
 
-// DEPRECATED: Use Fmt instead.
-//
-// Sprintf appends a labeled formatted string value to Event.
-func (e *Event) Sprintf(label, format string, a ...interface{}) *Event {
-	if !e.enabled {
-		return e
-	}
-	e.buf = append(e.buf, label...)
-	e.buf = append(e.buf, ':')
-	e.buf = append(e.buf, escape(fmt.Sprintf(format, a...))...)
-	e.buf = append(e.buf, '\t')
-	return e
-}
-
 // Bool appends a labeled bool value to Event.
 func (e *Event) Bool(label string, value bool) *Event {
 	if !e.enabled {
