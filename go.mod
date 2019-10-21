@@ -1,4 +1,4 @@
-module github.com/hnakamur/ltsvlog
+module github.com/hnakamur/ltsvlog/v3
 
 go 1.13
 

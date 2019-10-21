@@ -2,7 +2,7 @@ package ltsvlog_test
 
 import (
 	"github.com/hnakamur/errstack"
-	"github.com/hnakamur/ltsvlog"
+	ltsvlog "github.com/hnakamur/ltsvlog/v3"
 )
 
 func ExampleLTSVLogger_Err() {
