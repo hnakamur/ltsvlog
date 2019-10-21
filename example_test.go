@@ -36,7 +36,7 @@ func ExampleLTSVLogger_Debug() {
 
 func ExampleLTSVLogger_Info() {
 	ltsvlog.Logger.Info().String("msg", "goodbye, world").String("foo", "bar").
-		Fmt("nilValue", "%v", nil).Bytes("bytes", []byte("a/b")).Log()
+		Fmt("nilValue", "%v", nil).HexBytes("bytes", []byte("a/b")).Log()
 
 	// Output example:
 	// time:2017-05-20T19:16:11.798840Z	level:Info	msg:goodbye, world	foo:bar	nilValue:<nil>	bytes:0x612f62
@@ -51,8 +51,7 @@ func ExampleLTSVLoggerErr() {
 		return errstack.New("some error")
 	}
 	a := func() error {
-		err := b()
-		if err != nil {
+		if err := b(); err != nil {
 			return errstack.Errorf("add some message here: %s", err)
 		}
 		return nil
@@ -64,9 +63,8 @@ func ExampleLTSVLoggerErr() {
 	}
 
 	// Output example:
-	// time:2017-06-10T13:40:38.344079Z	level:Error	err:add explanation here, err=some error	key1:value1	stack:main.main.func1 github.com/hnakamur/ltsvlog/example/err/main.go:12,main.main.func2 github.com/hnakamur/ltsvlog/example/err/main.go:15,main.main github.com/hnakamur/ltsvlog/example/err/main.go:24,runtime.main runtime/proc.go:194,runtime.goexit runtime/asm_amd64.s:2338	key2:value2
-
-	// Output: hoge
+	// time:2019-10-21T22:00:34.549974Z	level:Error	err:add some message here: some error	reqID:req1	userID:1	stack:github.com/hnakamur/ltsvlog/v3_test.exampleErrInner@/home/hnakamur/go/src/github.com/hnakamur/ltsvlog/example_err_test.go:23 github.com/hnakamur/ltsvlog/v3_test.exampleErrOuter@/home/hnakamur/go/src/github.com/hnakamur/ltsvlog/example_err_test.go:16 github.com/hnakamur/ltsvlog/v3_test.ExampleLTSVLogger_Err@/home/hnakamur/go/src/github.com/hnakamur/ltsvlog/example_err_test.go:9 testing.runExample@/usr/local/go/src/testing/run_example.go:62 testing.runExamples@/usr/local/go/src/testing/example.go:44 testing.(*M).Run@/usr/local/go/src/testing/testing.go:1118 main.main@_testmain.go:52 runtime.main@/usr/local/go/src/runtime/proc.go:203
+	// Output:
 
 	// Actually we don't test the results.
 	// This example is added just for document purpose.
@@ -77,7 +75,7 @@ func ExampleEvent_String() {
 	ltsvlog.Logger.Info().String("json", jsonStr).Log()
 
 	// Output example:
-	// time:2017-06-10T10:22:48.083226Z        level:Info      json:{\n\t"foo": "bar\\nbaz"\n}\n
+	// time:2017-06-10T10:22:48.083226Z	level:Info	json:{\n\t"foo": "bar\\nbaz"\n}\n
 	// Output:
 
 	// Actually we don't test the results.
