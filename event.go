@@ -48,8 +48,8 @@ func (e *Event) Stringer(label string, value fmt.Stringer) *Event {
 	return e
 }
 
-// Bytes appends a labeled bytes value in hex format to Event.
-func (e *Event) Bytes(label string, value []byte) *Event {
+// HexBytes appends a labeled bytes value in hex format to Event.
+func (e *Event) HexBytes(label string, value []byte) *Event {
 	if !e.enabled {
 		return e
 	}
@@ -58,6 +58,12 @@ func (e *Event) Bytes(label string, value []byte) *Event {
 	e.buf = appendHexBytes(e.buf, value)
 	e.buf = append(e.buf, '\t')
 	return e
+}
+
+// Bytes appends a labeled bytes value in hex format to Event.
+// Deprecated. Use HexBytes instead.
+func (e *Event) Bytes(label string, value []byte) *Event {
+	return e.HexBytes(label, value)
 }
 
 // Fmt appends a labeled formatted string value to Event.
@@ -84,8 +90,8 @@ func (e *Event) Bool(label string, value bool) *Event {
 	return e
 }
 
-// Byte appends a labeled byte value to Event.
-func (e *Event) Byte(label string, value byte) *Event {
+// HexByte appends a labeled byte value to Event.
+func (e *Event) HexByte(label string, value byte) *Event {
 	if !e.enabled {
 		return e
 	}
@@ -94,6 +100,12 @@ func (e *Event) Byte(label string, value byte) *Event {
 	e.buf = appendHexByte(e.buf, value)
 	e.buf = append(e.buf, '\t')
 	return e
+}
+
+// Byte appends a labeled byte value to Event.
+// Deprecated. Use HexByte instead.
+func (e *Event) Byte(label string, value byte) *Event {
+	return e.HexByte(label, value)
 }
 
 // Int appends a labeled int value to Event.
