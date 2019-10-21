@@ -36,23 +36,23 @@ func main() {
 }
 
 func outer() error {
-	if err := iInner(); err != nil {
-		return errstack.WithLV(errstack.Errorf("add some message here: %s", err), "userID", "user1")
+	if err := inner(); err != nil {
+		return errstack.WithLV(errstack.Errorf("add some message here: %s", err)).Int64("userID", 1)
 	}
 	return nil
 }
 
-func iInner() error {
-	return errstack.WithLV(errstack.New("some error"), "reqID", "req1")
+func inner() error {
+	return errstack.WithLV(errstack.New("some error")).String("reqID", "req1")
 }
 ```
 
 An example output:
 
 ```
-time:2019-10-20T01:18:02.146127Z        level:Debug     msg:This is a debug message     str:foo    int:234
-time:2019-10-20T01:18:02.146143Z        level:Info      float1:3.14
-time:2019-10-20T01:18:02.146191Z        level:Error     err:add some message here: some error      reqID:req1      userID:user1    stack:main.outer@/home/hnakamur/go/src/github.com/hnakamur/ltsvlog/example/main.go:23 main.main@/home/hnakamur/go/src/github.com/hnakamur/ltsvlog/example/main.go:16 runtime.main@/usr/local/go/src/runtime/proc.go:212 runtime.goexit@/usr/local/go/src/runtime/asm_amd64.s:1358
+time:2019-10-21T21:46:53.777197Z	level:Debug	msg:This is a debug message	str:foo	int:234
+time:2019-10-21T21:46:53.777232Z	level:Info	float1:3.14
+time:2019-10-21T21:46:53.777272Z	level:Error	err:add some message here: some error	userID:1	stack:main.inner@/home/hnakamur/go/src/github.com/hnakamur/ltsvlog/example/main.go:31 main.outer@/home/hnakamur/go/src/github.com/hnakamur/ltsvlog/example/main.go:22 main.main@/home/hnakamur/go/src/github.com/hnakamur/ltsvlog/example/main.go:16 runtime.main@/usr/local/go/src/runtime/proc.go:203
 ```
 
 Since these log lines are long, please scroll horizontally to the right to see all the output.
