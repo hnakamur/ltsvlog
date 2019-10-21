@@ -49,14 +49,14 @@ func TestEvent_Log(t *testing.T) {
 		{
 			name: "byte",
 			f: func(l *LTSVLogger) {
-				l.Info().Byte("byte", 'b').Log()
+				l.Info().HexByte("byte", 'b').Log()
 			},
 			want: "level:Info\tbyte:0x62\n",
 		},
 		{
 			name: "bytes",
 			f: func(l *LTSVLogger) {
-				l.Info().Bytes("bytes", []byte("\t\n")).Log()
+				l.Info().HexBytes("bytes", []byte("\t\n")).Log()
 			},
 			want: "level:Info\tbytes:0x090a\n",
 		},
