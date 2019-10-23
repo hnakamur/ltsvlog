@@ -19,7 +19,7 @@ package main
 
 import (
 	"github.com/hnakamur/errstack"
-	"github.com/hnakamur/ltsvlog"
+	ltsvlog "github.com/hnakamur/ltsvlog/v3"
 )
 
 func main() {
