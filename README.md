@@ -1,4 +1,4 @@
-ltsvlog
+ltsvlog [![PkgGoDev](https://pkg.go.dev/badge/github.com/hnakamur/ltsvlog/v3)](https://pkg.go.dev/github.com/hnakamur/ltsvlog/v3)
 =======
 
 ltsvlog is a minimalist [LTSV; Labeled Tab-separated Values](http://ltsv.org/) logging library in Go.
