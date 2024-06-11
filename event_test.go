@@ -12,6 +12,7 @@ func TestEvent_Log(t *testing.T) {
 	buf := new(bytes.Buffer)
 	// We don't print time fields to make it easy to compare test results.
 	logger := NewLTSVLogger(buf, true, SetTimeLabel(""))
+	localTimeZone := time.Now().Format(defaultLocalTimeZoneFormat)
 
 	testCases := []struct {
 		name string
@@ -166,6 +167,14 @@ func TestEvent_Log(t *testing.T) {
 				l.Info().UTCTime("time2", t).Log()
 			},
 			want: "level:Info\ttime2:2017-05-21T12:44:56.987654Z\n",
+		},
+		{
+			name: "local_time",
+			f: func(l *LTSVLogger) {
+				t := time.Date(2017, 5, 21, 12, 44, 56, 987654321, time.Local)
+				l.Info().LocalTime("time2", t).Log()
+			},
+			want: "level:Info\ttime2:2017-05-21T12:44:56.987654" + localTimeZone + "\n",
 		},
 	}
 	for _, tc := range testCases {

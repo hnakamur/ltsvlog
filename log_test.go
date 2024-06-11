@@ -2,6 +2,7 @@ package ltsvlog
 
 import (
 	"bytes"
+	"os"
 	"testing"
 	"time"
 )
@@ -23,4 +24,15 @@ func TestAppendTime(t *testing.T) {
 			t.Errorf("time value mismatch. got=%s, want=%s", string(buf), want)
 		}
 	}
+}
+
+func ExampleLTSVLogger_Info() {
+	Logger = NewLTSVLogger(os.Stdout, false, UseLocalTimeZone(), SetLocalTimeZoneFormat("-0700"))
+	Logger.Info().String("msg", "hello").Log()
+
+	// Output example:
+	// time:2019-10-21T22:05:06.784123+0900	level:Info	msg:hello
+
+	// Actually we don't test the results.
+	// This example is added just for document purpose.
 }

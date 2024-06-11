@@ -229,6 +229,20 @@ func (e *Event) UTCTime(label string, value time.Time) *Event {
 	return e
 }
 
+// LocalTime appends a labeled local time value to Event.
+// The time value is converted to the local time zone and then printed
+// in the same format as specified with UseLocalTimezone.
+func (e *Event) LocalTime(label string, value time.Time) *Event {
+	if !e.enabled {
+		return e
+	}
+	e.buf = append(e.buf, label...)
+	e.buf = append(e.buf, ':')
+	e.buf = appendLocalTime(e.buf, value, e.logger.timeZoneBytes)
+	e.buf = append(e.buf, '\t')
+	return e
+}
+
 // Format formats the error. With "%v" and "%s", labeled values are
 // appended to the message in LTSV format.
 // With "%q", quoted LTSV format string is returned.

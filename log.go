@@ -35,7 +35,7 @@ type LogWriter interface {
 	Err(err error)
 }
 
-type appendPrefixFuncType func(buf []byte, level string) []byte
+type appendPrefixFuncType func(l *LTSVLogger, buf []byte, level string) []byte
 
 // LTSVLogger is a LTSV logger.
 type LTSVLogger struct {
@@ -44,6 +44,8 @@ type LTSVLogger struct {
 	timeLabel        string
 	levelLabel       string
 	appendPrefixFunc appendPrefixFuncType
+	useLocalTimeZone bool
+	timeZoneBytes    []byte
 }
 
 // Option is the function type to set an option of LTSVLogger
@@ -65,12 +67,41 @@ func SetLevelLabel(label string) Option {
 	}
 }
 
+// UseLocalTimeZone returns the option function to use the local time zone
+// for each log when the time label is not empty.
+func UseLocalTimeZone() Option {
+	return func(l *LTSVLogger) {
+		l.useLocalTimeZone = true
+	}
+}
+
+// SetLocalTimeZoneFormat returns the option function to set the time zone
+// format for local times. This format is used in the following:
+//
+// 1. time in each log when the time label is not empty
+// 2. time for Event.LocalTime
+//
+// The format string is the same as time.Time.Format (e.g., "Z07:00").
+// When the empty string is passed, the local time will be converted to
+// strings without time zone.
+//
+// If this is not called, the default format "Z07:00" is used.
+func SetLocalTimeZoneFormat(timeZoneFormat string) Option {
+	return func(l *LTSVLogger) {
+		if timeZoneFormat != "" {
+			l.timeZoneBytes = time.Now().AppendFormat(nil, timeZoneFormat)
+		} else {
+			l.timeZoneBytes = nil
+		}
+	}
+}
+
 const (
 	defaultTimeLabel  = "time"
 	defaultLevelLabel = "level"
-)
 
-var defaultappendPrefixFuncType = appendPrefixFunc(defaultTimeLabel, defaultLevelLabel)
+	defaultLocalTimeZoneFormat = "Z07:00"
+)
 
 // NewLTSVLogger creates a LTSV logger with the default time and value format.
 //
@@ -84,27 +115,27 @@ var defaultappendPrefixFuncType = appendPrefixFunc(defaultTimeLabel, defaultLeve
 // The second value is the log level with the default label "level".
 func NewLTSVLogger(w io.Writer, debugEnabled bool, options ...Option) *LTSVLogger {
 	l := &LTSVLogger{
-		writer:           w,
-		debugEnabled:     debugEnabled,
-		timeLabel:        defaultTimeLabel,
-		levelLabel:       defaultLevelLabel,
-		appendPrefixFunc: defaultappendPrefixFuncType,
+		writer:        w,
+		debugEnabled:  debugEnabled,
+		timeLabel:     defaultTimeLabel,
+		levelLabel:    defaultLevelLabel,
+		timeZoneBytes: time.Now().AppendFormat(nil, defaultLocalTimeZoneFormat),
 	}
 	for _, o := range options {
 		o(l)
 	}
-	if l.timeLabel != defaultTimeLabel || l.levelLabel != defaultLevelLabel {
-		l.appendPrefixFunc = appendPrefixFunc(l.timeLabel, l.levelLabel)
-	}
+
+	l.appendPrefixFunc = buildAppendPrefixFunc(l.timeLabel, l.levelLabel,
+		l.useLocalTimeZone)
 	return l
 }
 
 // DebugEnabled returns whether or not the debug level is enabled.
 // You can avoid the cost of evaluation of arguments passed to Debug like:
 //
-//   if ltsvlog.Logger.DebugEnabled() {
-//       ltsvlog.Logger.Debug().String("label1", someSlowFunction()).Log()
-//   }
+//	if ltsvlog.Logger.DebugEnabled() {
+//	    ltsvlog.Logger.Debug().String("label1", someSlowFunction()).Log()
+//	}
 func (l *LTSVLogger) DebugEnabled() bool {
 	return l.debugEnabled
 }
@@ -121,7 +152,7 @@ func (l *LTSVLogger) Debug() *Event {
 	ev.enabled = l.debugEnabled
 	ev.buf = ev.buf[:0]
 	if ev.enabled {
-		ev.buf = l.appendPrefixFunc(ev.buf, "Debug")
+		ev.buf = l.appendPrefixFunc(l, ev.buf, "Debug")
 	}
 	return ev
 }
@@ -134,7 +165,7 @@ func (l *LTSVLogger) Info() *Event {
 	ev.logger = l
 	ev.enabled = true
 	ev.buf = ev.buf[:0]
-	ev.buf = l.appendPrefixFunc(ev.buf, "Info")
+	ev.buf = l.appendPrefixFunc(l, ev.buf, "Info")
 	return ev
 }
 
@@ -150,7 +181,7 @@ func (l *LTSVLogger) Info() *Event {
 // label is appended.
 func (l *LTSVLogger) Err(err error) {
 	buf := make([]byte, 0, 8192)
-	buf = l.appendPrefixFunc(buf, "Error")
+	buf = l.appendPrefixFunc(l, buf, "Error")
 	buf = append(buf, "err:"...)
 	buf = append(buf, err.Error()...)
 	if lv := errstack.LV(err); len(lv) > 0 {
@@ -174,9 +205,24 @@ func (l *LTSVLogger) Err(err error) {
 	_, _ = l.writer.Write(buf)
 }
 
-func appendPrefixFunc(timeLabel, levelLabel string) appendPrefixFuncType {
+func buildAppendPrefixFunc(timeLabel, levelLabel string, useLocalTimeZone bool) appendPrefixFuncType {
 	if timeLabel != "" && levelLabel != "" {
-		return func(buf []byte, level string) []byte {
+		if useLocalTimeZone {
+			return func(l *LTSVLogger, buf []byte, level string) []byte {
+				buf = append(buf, timeLabel...)
+				buf = append(buf, ':')
+				now := time.Now()
+				buf = appendLocalTime(buf, now, l.timeZoneBytes)
+				buf = append(buf, '\t')
+				buf = append(buf, levelLabel...)
+				buf = append(buf, ':')
+				buf = append(buf, level...)
+				buf = append(buf, '\t')
+				return buf
+			}
+		}
+
+		return func(l *LTSVLogger, buf []byte, level string) []byte {
 			buf = append(buf, timeLabel...)
 			buf = append(buf, ':')
 			now := time.Now().UTC()
@@ -189,7 +235,18 @@ func appendPrefixFunc(timeLabel, levelLabel string) appendPrefixFuncType {
 			return buf
 		}
 	} else if timeLabel != "" && levelLabel == "" {
-		return func(buf []byte, level string) []byte {
+		if useLocalTimeZone {
+			return func(l *LTSVLogger, buf []byte, level string) []byte {
+				buf = append(buf, timeLabel...)
+				buf = append(buf, ':')
+				now := time.Now()
+				buf = appendLocalTime(buf, now, l.timeZoneBytes)
+				buf = append(buf, '\t')
+				return buf
+			}
+		}
+
+		return func(l *LTSVLogger, buf []byte, level string) []byte {
 			buf = append(buf, timeLabel...)
 			buf = append(buf, ':')
 			now := time.Now().UTC()
@@ -198,7 +255,7 @@ func appendPrefixFunc(timeLabel, levelLabel string) appendPrefixFuncType {
 			return buf
 		}
 	} else if timeLabel == "" && levelLabel != "" {
-		return func(buf []byte, level string) []byte {
+		return func(l *LTSVLogger, buf []byte, level string) []byte {
 			buf = append(buf, levelLabel...)
 			buf = append(buf, ':')
 			buf = append(buf, level...)
@@ -206,7 +263,7 @@ func appendPrefixFunc(timeLabel, levelLabel string) appendPrefixFuncType {
 			return buf
 		}
 	} else {
-		return func(buf []byte, level string) []byte {
+		return func(l *LTSVLogger, buf []byte, level string) []byte {
 			return buf
 		}
 	}
@@ -225,6 +282,22 @@ func appendUTCTime(buf []byte, t time.Time) []byte {
 	itoa(tmp[17:19], sec, 2)
 	itoa(tmp[20:26], t.Nanosecond()/1e3, 6)
 	return append(buf, tmp...)
+}
+
+func appendLocalTime(buf []byte, t time.Time, cachedTimeZoneBytes []byte) []byte {
+	t = t.Local()
+	tmp := []byte("0000-00-00T00:00:00.000000")
+	year, month, day := t.Date()
+	hour, min, sec := t.Clock()
+	itoa(tmp[:4], year, 4)
+	itoa(tmp[5:7], int(month), 2)
+	itoa(tmp[8:10], day, 2)
+	itoa(tmp[11:13], hour, 2)
+	itoa(tmp[14:16], min, 2)
+	itoa(tmp[17:19], sec, 2)
+	itoa(tmp[20:26], t.Nanosecond()/1e3, 6)
+	ret := append(buf, tmp...)
+	return append(ret, cachedTimeZoneBytes...)
 }
 
 // Cheap integer to fixed-width decimal ASCII.  Give a negative width to avoid zero-padding.
