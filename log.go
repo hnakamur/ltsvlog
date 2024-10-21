@@ -28,6 +28,9 @@ import (
 )
 
 // LogWriter is a LTSV logger interface
+//
+// Deprecated: This is not used anywhere.
+// This should not be created in this package in the first place.
 type LogWriter interface {
 	DebugEnabled() bool
 	Debug() *Event
