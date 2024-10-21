@@ -172,6 +172,18 @@ func (l *LTSVLogger) Info() *Event {
 	return ev
 }
 
+// Warn returns a new Event for writing a Warn level log.
+// This Event is returned from the internal event pool, so be sure
+// to call Log() to put this event back to the event pool.
+func (l *LTSVLogger) Warn() *Event {
+	ev := eventPool.Get().(*Event)
+	ev.logger = l
+	ev.enabled = true
+	ev.buf = ev.buf[:0]
+	ev.buf = l.appendPrefixFunc(l, ev.buf, "Warn")
+	return ev
+}
+
 // Err writes a log for an error with the error level.
 // It writes the err.Error() value with the label "err".
 //
