@@ -220,6 +220,12 @@ func (l *LTSVLogger) Err(err error) {
 	_, _ = l.writer.Write(buf)
 }
 
+// FormatLocalTime format a time with the format specified by
+// SetLocalTimeZoneFormat
+func (l *LTSVLogger) FormatLocalTime(value time.Time) string {
+	return string(appendLocalTime(nil, value, l.timeZoneBytes))
+}
+
 func buildAppendPrefixFunc(timeLabel, levelLabel string, useLocalTimeZone bool) appendPrefixFuncType {
 	if timeLabel != "" && levelLabel != "" {
 		if useLocalTimeZone {
