@@ -2,9 +2,12 @@ package ltsvlog
 
 import (
 	"bytes"
+	"errors"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/hnakamur/errstack"
 )
 
 func TestAppendTime(t *testing.T) {
@@ -35,4 +38,13 @@ func ExampleLTSVLogger_Info() {
 
 	// Actually we don't test the results.
 	// This example is added just for document purpose.
+}
+
+func TestEventErr(t *testing.T) {
+	var b bytes.Buffer
+	l := NewLTSVLogger(&b, false, SetTimeLabel(""))
+	l.Warn().Err(errstack.WithLV(errors.New("some error")).String("field1", "value1")).String("field2", "value2").Log()
+	if got, want := b.String(), "level:Warn\terr:some error\tfield1:value1\tfield2:value2\n"; got != want {
+		t.Errorf("result mismatch,\n got=%q,\nwant=%q", got, want)
+	}
 }

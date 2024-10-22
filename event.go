@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/hnakamur/errstack"
 )
 
 var eventPool = &sync.Pool{
@@ -253,6 +255,34 @@ func (e *Event) Format(s fmt.State, c rune) {
 	case 'q':
 		fmt.Fprintf(s, "%q", e.buf[:len(e.buf)-1])
 	}
+}
+
+// Err appends an error and its labeled values to Event.
+func (e *Event) Err(err error) *Event {
+	if !e.enabled {
+		return e
+	}
+	e.buf = append(e.buf, "err:"...)
+	e.buf = append(e.buf, err.Error()...)
+	if lv := errstack.LV(err); len(lv) > 0 {
+		for i := 0; i < len(lv); i += 2 {
+			e.buf = append(e.buf, '\t')
+			e.buf = append(e.buf, lv[i]...)
+			e.buf = append(e.buf, ':')
+			e.buf = append(e.buf, escape(lv[i+1])...)
+		}
+	}
+	if ff := errstack.Stack(err); len(ff) > 0 {
+		e.buf = append(e.buf, "\tstack:"...)
+		for i, f := range ff {
+			if i > 0 {
+				e.buf = append(e.buf, ' ')
+			}
+			e.buf = append(e.buf, f.String()...)
+		}
+	}
+	e.buf = append(e.buf, '\t')
+	return e
 }
 
 // Log writes this event if the logger which created this event is enabled,
